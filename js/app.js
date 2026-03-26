@@ -1,12 +1,22 @@
-// ====== 網路層模擬與快取 (Storage Layer) ======
+// ==========================================
+// 1. 網路層模擬與快取 (Storage Layer) - 加入安全機制防崩潰
+// ==========================================
 const NetAPI = {
-    save: (key, data) => localStorage.setItem(key, JSON.stringify(data)),
-    load: (key) => JSON.parse(localStorage.getItem(key))
+    save: (key, data) => {
+        try { localStorage.setItem(key, JSON.stringify(data)); } 
+        catch (e) { console.warn("儲存失敗，可能處於無痕模式或空間不足", e); }
+    },
+    load: (key) => {
+        try { return JSON.parse(localStorage.getItem(key)); } 
+        catch (e) { return null; }
+    }
 };
 
 const KEYS = { logs: 'logs_vDual', recipes: 'recipes_vDual', plans: 'plans_vDual', user: 'user_vDual', gym: 'gym_vDual', theme: 'theme_vDual', gymPlans: 'gymPlans_vDual', posts: 'posts_vDual', profile: 'profile_vDual' };
 
-// ====== 狀態初始化 (State Init) ======
+// ==========================================
+// 2. 狀態初始化 (State Init)
+// ==========================================
 let logs = NetAPI.load(KEYS.logs) || {};
 let recipes = NetAPI.load(KEYS.recipes) || [];
 let planner = NetAPI.load(KEYS.plans) || {};
@@ -34,7 +44,45 @@ let currentLang = NetAPI.load('lang_vDual') || 'zh';
 let tempMediaData = null;
 let tempMediaType = null;
 
-// ====== 導航切換邏輯 ======
+// ==========================================
+// 3. UI 語言與系統切換 (Language & Routing)
+// ==========================================
+
+// 這是 AI 遺漏的核心函數，它負責處理頁面多國語言的切換與綁定
+function setLang(lang) {
+    currentLang = lang;
+    NetAPI.save('lang_vDual', lang);
+    
+    // 遍歷所有包含 data-i18n 屬性的元素並替換文字
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18nDict[lang] && i18nDict[lang][key]) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.placeholder = i18nDict[lang][key];
+            } else {
+                el.innerHTML = i18nDict[lang][key]; 
+            }
+        }
+    });
+
+    // 手動更新特定的輸入框 placeholder
+    const searchPlaceholders = {
+        'zh': { 'foodSearch': '🔍 搜尋食材...', 'planSearch': '🔍 搜尋...', 'socialSearch': '🔍 搜尋用戶或內容...' },
+        'en': { 'foodSearch': '🔍 Search...', 'planSearch': '🔍 Search...', 'socialSearch': '🔍 Search users...' }
+    };
+    if(document.getElementById('foodSearch')) document.getElementById('foodSearch').placeholder = searchPlaceholders[lang]['foodSearch'];
+    if(document.getElementById('planSearch')) document.getElementById('planSearch').placeholder = searchPlaceholders[lang]['planSearch'];
+    if(document.getElementById('socialSearch')) document.getElementById('socialSearch').placeholder = searchPlaceholders[lang]['socialSearch'];
+
+    const langSelect = document.getElementById('langSelect');
+    if(langSelect) langSelect.value = lang;
+
+    // 更新依賴語言的 UI 元件
+    initPlannerDates();
+    initGymPlannerDays();
+    renderUserStats();
+}
+
 function showTab(t) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.getElementById(t + 'Tab').classList.add('active');
@@ -114,7 +162,10 @@ function setGymPlanType(type) {
     document.getElementById('gPlanName').value = '';
 }
 
-// ====== 搜尋與份量修改 ======
+// ==========================================
+// 4. 各分頁核心邏輯 (Diet, Gym, User, Community)
+// ==========================================
+
 function searchFood(q, mode) {
     const boxes = { 'today':'searchRes', 'recipe':'recipeSearchRes', 'plan':'planSearchRes' };
     const box = document.getElementById(boxes[mode]);
@@ -172,12 +223,12 @@ function searchGym(q, mode) {
     box.innerHTML = matches.map(n => `<div class="p-5 border-b border-slate-100 dark:border-slate-800 cursor-pointer font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors text-slate-800 dark:text-slate-200" onclick="selectGym('${n.replace(/'/g, "\\'")}', '${mode}')">${gymType==='cardio'?'🏃':'🏋️'} ${n}</div>`).join('');
     if(matches.length > 0) box.classList.remove('hidden'); else box.classList.add('hidden');
 }
+
 function selectGym(n, mode) { 
     if(mode === 'today') { document.getElementById('gName').value = n; document.getElementById('gymSearchRes').classList.add('hidden'); } 
     else { document.getElementById('gPlanName').value = n; document.getElementById('gymPlanSearchRes').classList.add('hidden'); }
 }
 
-// ====== 飲食記錄渲染 ======
 function addLog() {
     let baseName = document.getElementById('foodSearch').value; if(!baseName) return;
     let qty = parseFloat(document.getElementById('foodQty').value) || 1;
@@ -230,7 +281,6 @@ function removeLog(tk, idx) { logs[today].splice(logs[today].indexOf(logs[today]
 function addWater(amt) { user.water[today] = Math.max(0, (user.water[today] || 0) + amt); NetAPI.save(KEYS.user, user); renderWater(); }
 function renderWater() { document.getElementById('waterCurrent').innerText = (user.water[today] || 0) + ' ml'; }
 
-// ====== Planner 7日規劃 ======
 function initPlannerDates() {
     const bar = document.getElementById('plannerDateBar'); bar.innerHTML = '';
     for(let i=0; i<7; i++) {
@@ -278,7 +328,6 @@ function saveRecipe() { const name = document.getElementById('newRecipeName').va
 function renderSavedRecipes() { document.getElementById('savedRecipesList').innerHTML = recipes.map((r, i) => `<div class="card p-5 mb-3 flex justify-between items-center border-l-[4px] border-emerald-500 hover:border-l-8 transition-all"><div><p class="font-black text-sm mb-1 text-slate-800 dark:text-white tracking-tight">🍱 ${r.name}</p><p class="text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded inline-block text-slate-500 dark:text-slate-400">P:${r.p} C:${r.c} F:${r.f}</p></div><button onclick="recipes.splice(${i},1);NetAPI.save(KEYS.recipes,recipes);renderSavedRecipes()" class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 font-black flex items-center justify-center btn-press">✕</button></div>`).join(''); }
 function updateMacroChart(p,c,f) { const ctx = document.getElementById('todayMacroChart').getContext('2d'); if(todayMacroChart) todayMacroChart.destroy(); todayMacroChart = new Chart(ctx, { type:'doughnut', data:{ datasets:[{data:[p*4||0.1, c*4||0.1, f*9||0.1], backgroundColor:['#2563eb','#10b981','#f59e0b'], borderWidth:0, hoverOffset: 4}]}, options:{cutout:'75%', layout:{padding:0}, plugins:{legend:{display:false}, tooltip:{enabled:false}}} }); }
 
-// ====== 用戶數據與圖表 ======
 function updateUser() {
     user.w = parseFloat(document.getElementById('uW').value); user.targetW = parseFloat(document.getElementById('uTargetW').value); user.h = parseFloat(document.getElementById('uH').value); user.a = parseInt(document.getElementById('uA').value); user.act = parseFloat(document.getElementById('uAct').value); user.gender = document.getElementById('uGender').value;
     if(!user.weights) user.weights = []; let existingWeight = user.weights.find(w => w.d === today); if(existingWeight) { existingWeight.v = user.w; } else { user.weights.push({d:today, v:user.w}); } user.weights.sort((a,b) => new Date(a.d) - new Date(b.d));
@@ -308,7 +357,6 @@ function initCharts() {
     }
 }
 
-// ====== GYM 與直覺日曆 ======
 function startRestTimer(seconds) {
     clearInterval(restTimer); let t = parseInt(seconds) || 90;
     const display = document.getElementById('restTimerDisplay'); const text = document.getElementById('restTimerText'); display.classList.remove('hidden');
@@ -422,7 +470,6 @@ function renderGymPlanList() {
 }
 function removeGymPlan(idx) { gymPlanner[currentGymPlanDay].splice(idx, 1); NetAPI.save(KEYS.gymPlans, gymPlanner); renderGymPlanList(); }
 
-// ====== 社群功能 ======
 function renderProfile() {
     document.getElementById('profileName').value = socialProfile.name; document.getElementById('profileBio').value = socialProfile.bio;
     document.getElementById('profileFollowers').innerText = socialProfile.followers; document.getElementById('profileFollowing').innerText = socialProfile.following;
@@ -458,10 +505,11 @@ function publishPost() {
 
 function togglePostMenu(id) { let menu = document.getElementById('postMenu-' + id); if(menu) menu.classList.toggle('hidden'); }
 
+// 修正了 p.text 遺失時拋出錯誤的 bug
 function renderFeed() {
     const container = document.getElementById('feedList'); const q = document.getElementById('socialSearch').value.toLowerCase();
     if(communityPosts.length === 0) { communityPosts = [ { id: 1, author: 'Alex_Fitness', avatarURL: '', text: 'Just hit a new PR on Deadlift! 140kg x 5! 🔥💪', type: 'training', date: '2026/03/24', likes: 12, comments: [{author: 'GymBro', text: 'Beast mode!!'}] }, { id: 2, author: 'HealthyEats', avatarURL: '', text: '今天的增肌餐：烤鮭魚配藜麥與大量蔬菜。', type: 'diet', date: '2026/03/24', likes: 8, comments: [] } ]; }
-    let filteredPosts = communityPosts.filter(p => p.text.toLowerCase().includes(q) || p.author.toLowerCase().includes(q));
+    let filteredPosts = communityPosts.filter(p => (p.text && p.text.toLowerCase().includes(q)) || p.author.toLowerCase().includes(q));
     
     container.innerHTML = filteredPosts.map(p => {
         let badge = p.type === 'diet' ? '🍱 Diet' : (p.type === 'training' ? '💪 Training' : '👤 Physique'); let mediaHTML = '';
@@ -502,15 +550,23 @@ function addComment(id) {
     let post = communityPosts.find(p => p.id === id); if(post) { if(!post.comments) post.comments = []; post.comments.push({ author: socialProfile.name, text: text }); NetAPI.save(KEYS.posts, communityPosts); renderFeed(); }
 }
 
-// ====== 系統功能 ======
 function toggleDarkMode() {
     document.documentElement.classList.toggle('dark'); const isDark = document.documentElement.classList.contains('dark');
     document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙'; document.getElementById('darkModeToggle').checked = isDark; NetAPI.save(KEYS.theme, isDark ? 'dark' : 'light');
 }
 
+// 綁定初始化載入，強制渲染主頁面
 window.onload = () => {
     const savedTheme = NetAPI.load(KEYS.theme);
-    if(savedTheme === 'dark') { document.documentElement.classList.add('dark'); document.getElementById('themeBtn').innerText = '☀️'; document.getElementById('darkModeToggle').checked = true; }
-    document.getElementById('uW').value = user.w || ''; document.getElementById('uTargetW').value = user.targetW || ''; document.getElementById('uH').value = user.h || ''; document.getElementById('uA').value = user.a || ''; document.getElementById('uGender').value = user.gender || 'male'; document.getElementById('uAct').value = user.act || '1.2';
+    if(savedTheme === 'dark') { document.documentElement.classList.add('dark'); document.getElementById('themeBtn').innerText = '☀️'; if(document.getElementById('darkModeToggle')) document.getElementById('darkModeToggle').checked = true; }
+    
+    document.getElementById('uW').value = user.w || ''; 
+    document.getElementById('uTargetW').value = user.targetW || ''; 
+    document.getElementById('uH').value = user.h || ''; 
+    document.getElementById('uA').value = user.a || ''; 
+    document.getElementById('uGender').value = user.gender || 'male'; 
+    document.getElementById('uAct').value = user.act || '1.2';
+    
     setLang(currentLang); 
+    showTab('mealHub'); // 確保進入頁面時綁定第一個分頁的 UI 繪製
 };
