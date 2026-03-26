@@ -7,49 +7,71 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
 
-    <main class="max-w-md mx-auto min-h-screen px-6 pt-safe-top pb-safe-bottom">
+    <main class="max-w-md mx-auto min-h-screen px-6 pt-safe-top pb-20">
         <header class="py-8 flex justify-between items-center">
-            <h1 class="text-3xl font-extrabold tracking-tight text-indigo-600 dark:text-indigo-400">OmniFit</h1>
+            <h1 class="text-3xl font-black tracking-tight text-indigo-600 dark:text-indigo-400">OmniFit</h1>
             <button id="themeToggle" class="p-2 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-md shadow-sm">
                 <span class="dark:hidden">🌙</span><span class="hidden dark:inline">☀️</span>
             </button>
         </header>
 
-        <section id="diet-module" class="glass-card p-6 rounded-3xl mb-8">
-            <h2 class="text-xl font-bold mb-4 flex items-center"><span class="mr-2">🔥</span> TDEE 計算器</h2>
+        <section class="glass-card p-6 rounded-3xl mb-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center"><span class="mr-2">👤</span> 身體數據</h2>
             <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="number" id="age" placeholder="年齡" class="input-field">
-                    <select id="gender" class="input-field">
-                        <option value="male">男</option>
-                        <option value="female">女</option>
-                    </select>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold opacity-50 ml-1">年齡</label>
+                        <input type="number" id="age" placeholder="25" class="input-field">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold opacity-50 ml-1">性別</label>
+                        <select id="gender" class="input-field">
+                            <option value="male">男</option>
+                            <option value="female">女</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="number" id="height" placeholder="身高 (cm)" class="input-field">
-                    <input type="number" id="weight" placeholder="體重 (kg)" class="input-field">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold opacity-50 ml-1">身高 (cm)</label>
+                        <input type="number" id="height" placeholder="175" class="input-field">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold opacity-50 ml-1">體重 (kg)</label>
+                        <input type="number" id="weight" placeholder="70" class="input-field">
+                    </div>
                 </div>
-                <select id="activity" class="input-field">
-                    <option value="1.2">久坐 (不運動)</option>
-                    <option value="1.375">輕度 (每週 1-3 天)</option>
-                    <option value="1.55">中度 (每週 3-5 天)</option>
-                    <option value="1.725">高度 (每週 6-7 天)</option>
-                </select>
-                <button id="calcBtn" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all">計算結果</button>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold opacity-50 ml-1">日常活動量</label>
+                    <select id="activity" class="input-field">
+                        <option value="1.2">久坐 (辦公、不運動)</option>
+                        <option value="1.375">輕度 (每週運動 1-3 天)</option>
+                        <option value="1.55">中度 (每週運動 3-5 天)</option>
+                        <option value="1.725">高度 (每週運動 6-7 天)</option>
+                        <option value="1.9">極高 (運動員、體力勞動)</option>
+                    </select>
+                </div>
+                <button id="saveBtn" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none transition-all active:scale-95">
+                    更新並計算 TDEE
+                </button>
             </div>
         </section>
 
-        <div id="resultArea" class="hidden">
+        <div id="resultArea" class="hidden animate-in fade-in slide-in-from-bottom-4">
             <div class="glass-card-accent p-6 rounded-3xl text-center">
-                <p class="text-sm font-semibold opacity-80">你的每日 TDEE 為</p>
-                <div class="text-5xl font-black my-2"><span id="tdeeVal" class="text-indigo-600">0</span> <small class="text-lg">kcal</small></div>
+                <p class="text-sm font-semibold uppercase tracking-wider opacity-70">預估每日總熱量消耗 (TDEE)</p>
+                <div class="text-5xl font-black my-3">
+                    <span id="tdeeVal" class="text-indigo-600 dark:text-indigo-300">0</span>
+                    <span class="text-lg font-bold">kcal</span>
+                </div>
+                <div class="flex justify-center gap-4 text-xs font-medium opacity-60">
+                    <span>BMR: <span id="bmrVal">0</span> kcal</span>
+                </div>
             </div>
         </div>
     </main>
