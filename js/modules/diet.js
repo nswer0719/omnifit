@@ -1,30 +1,34 @@
 // js/modules/diet.js
+import { FoodDatabase } from '../database.js';
+
 export const DietModule = {
-    /**
-     * 使用 Mifflin-St Jeor 公式計算
-     * 男: BMR = 10w + 6.25h - 5a + 5
-     * 女: BMR = 10w + 6.25h - 5a - 161
-     */
+    // 原有的 TDEE 計算
     calculate(stats) {
         const { age, gender, height, weight, activity } = stats;
-        
         let bmr = (10 * weight) + (6.25 * height) - (5 * age);
         bmr = (gender === 'male') ? bmr + 5 : bmr - 161;
-        
-        const tdee = bmr * activity;
-        
-        return {
-            bmr: Math.round(bmr),
-            tdee: Math.round(tdee)
-        };
+        return { bmr: Math.round(bmr), tdee: Math.round(bmr * activity) };
     },
 
-    // 未來可以在這裡新增：建議蛋白質攝取、水分計算等
-    getMacroAdvice(tdee) {
-        return {
-            protein: Math.round(tdee * 0.3 / 4), // 30% 蛋白質
-            carbs: Math.round(tdee * 0.4 / 4),   // 40% 碳水
-            fat: Math.round(tdee * 0.3 / 9)      // 30% 脂肪
-        };
+    // 搜尋食物
+    searchFood(query) {
+        return FoodDatabase.filter(f => f.name.includes(query));
+    },
+
+    // 計算餐單總熱量
+    calculateMeal(mealItems) {
+        return mealItems.reduce((acc, item) => {
+            const food = FoodDatabase.find(f => f.id === item.id);
+            if (!food) return acc;
+            
+            // 計算比例：用戶輸入的量 / 1 (因為單位已經是 100g 或 1個)
+            const ratio = item.amount; 
+            return {
+                kcal: acc.kcal + (food.kcal * ratio),
+                protein: acc.protein + (food.protein * ratio),
+                fat: acc.fat + (food.fat * ratio),
+                carbs: acc.carbs + (food.carbs * ratio)
+            };
+        }, { kcal: 0, protein: 0, fat: 0, carbs: 0 });
     }
 };
