@@ -1,95 +1,125 @@
-// js/main.js
 import { Storage } from './storage.js';
 import { DietModule } from './modules/diet.js';
+import { FoodDatabase } from './database.js';
 
 const App = {
-    // 緩存常用的 DOM 元素
-    ui: {
-        age: document.getElementById('age'),
-        gender: document.getElementById('gender'),
-        height: document.getElementById('height'),
-        weight: document.getElementById('weight'),
-        activity: document.getElementById('activity'),
-        saveBtn: document.getElementById('saveBtn'),
-        tdeeVal: document.getElementById('tdeeVal'),
-        bmrVal: document.getElementById('bmrVal'),
-        resultArea: document.getElementById('resultArea'),
-        themeBtn: document.getElementById('themeToggle')
+    state: {
+        meal: [] // { id, name, amount, kcal }
     },
 
     init() {
-        console.log("OmniFit 系統啟動...");
-        this.loadUserStats();
         this.bindEvents();
-        this.applyTheme();
+        this.loadUserStats();
+        this.renderMeal();
     },
 
     bindEvents() {
-        // 計算按鈕
-        this.ui.saveBtn.addEventListener('click', () => this.updateStats());
+        // TDEE 更新
+        document.getElementById('saveBtn').addEventListener('click', () => this.handleUpdateTDEE());
         
-        // 主題切換
-        this.ui.themeBtn.addEventListener('click', () => this.toggleTheme());
+        // 食物搜尋
+        const searchInput = document.getElementById('foodSearch');
+        searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
+
+        // 點擊頁面其他地方關閉下拉選單
+        document.addEventListener('click', (e) => {
+            if (e.target.id !== 'foodSearch') document.getElementById('searchDropdown').classList.add('hidden');
+        });
     },
 
-    updateStats() {
-        const stats = {
-            age: parseFloat(this.ui.age.value),
-            gender: this.ui.gender.value,
-            height: parseFloat(this.ui.height.value),
-            weight: parseFloat(this.ui.weight.value),
-            activity: parseFloat(this.ui.activity.value)
-        };
+    handleSearch(query) {
+        const dropdown = document.getElementById('searchDropdown');
+        if (!query) { dropdown.classList.add('hidden'); return; }
 
-        // 驗證
-        if (Object.values(stats).some(val => !val && typeof val !== 'string')) {
-            alert("請完整填寫身體數據數據！");
+        const results = FoodDatabase.filter(f => f.name.includes(query));
+        dropdown.innerHTML = results.map(f => `
+            <div class="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer flex justify-between border-b dark:border-slate-700 last:border-0" 
+                 onclick="window.addFoodToMeal('${f.id}', '${f.name}', ${f.kcal}, '${f.unit}')">
+                <span>${f.name}</span>
+                <span class="text-xs opacity-50">${f.kcal}kcal / ${f.unit}</span>
+            </div>
+        `).join('');
+        
+        dropdown.classList.remove('hidden');
+    },
+
+    addFood(id, name, kcal, unit) {
+        const amount = prompt(`你要加入多少單位 (${unit})?`, "1");
+        if (amount === null || isNaN(amount)) return;
+
+        this.state.meal.push({
+            id, name, amount: parseFloat(amount), kcal, unit, 
+            ts: Date.now()
+        });
+        
+        this.renderMeal();
+        document.getElementById('foodSearch').value = '';
+        document.getElementById('searchDropdown').classList.add('hidden');
+    },
+
+    renderMeal() {
+        const list = document.getElementById('mealList');
+        const totalEl = document.getElementById('mealTotalKcal');
+        
+        if (this.state.meal.length === 0) {
+            list.innerHTML = `<p class="text-center text-xs opacity-40 py-4">餐單目前是空的</p>`;
+            totalEl.innerText = "0 kcal";
             return;
         }
 
-        // 邏輯處理
-        const results = DietModule.calculate(stats);
-        
-        // 儲存數據
-        Storage.save('user_stats', stats);
-        
-        // 渲染 UI
-        this.renderResults(results);
-        
-        // 觸覺反饋
-        if (navigator.vibrate) navigator.vibrate(20);
+        let totalKcal = 0;
+        list.innerHTML = this.state.meal.map((item, index) => {
+            const itemTotal = Math.round(item.kcal * item.amount);
+            totalKcal += itemTotal;
+            return `
+                <div class="flex justify-between items-center bg-white/50 dark:bg-slate-800/50 p-3 rounded-xl border dark:border-slate-700">
+                    <div>
+                        <div class="font-bold text-sm">${item.name}</div>
+                        <div class="text-xs opacity-50">${item.amount} ${item.unit}</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-bold text-indigo-600">${itemTotal} kcal</span>
+                        <button onclick="window.removeFood(${index})" class="text-red-400 text-xs">✕</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        totalEl.innerText = `${totalKcal.toLocaleString()} kcal`;
     },
 
-    renderResults(results) {
-        this.ui.tdeeVal.innerText = results.tdee.toLocaleString();
-        this.ui.bmrVal.innerText = results.bmr.toLocaleString();
-        this.ui.resultArea.classList.remove('hidden');
+    handleUpdateTDEE() {
+        const stats = {
+            age: parseFloat(document.getElementById('age').value),
+            gender: document.getElementById('gender').value,
+            height: parseFloat(document.getElementById('height').value),
+            weight: parseFloat(document.getElementById('weight').value),
+            activity: parseFloat(document.getElementById('activity').value)
+        };
+        const res = DietModule.calculate(stats);
+        Storage.save('user_stats', stats);
+        this.displayTDEE(res.tdee);
+    },
+
+    displayTDEE(val) {
+        document.getElementById('tdeeVal').innerText = val.toLocaleString();
+        document.getElementById('resultArea').classList.remove('hidden');
     },
 
     loadUserStats() {
         const saved = Storage.load('user_stats');
         if (saved) {
-            this.ui.age.value = saved.age;
-            this.ui.gender.value = saved.gender;
-            this.ui.height.value = saved.height;
-            this.ui.weight.value = saved.weight;
-            this.ui.activity.value = saved.activity;
-            
-            const results = DietModule.calculate(saved);
-            this.renderResults(results);
+            const res = DietModule.calculate(saved);
+            this.displayTDEE(res.tdee);
         }
-    },
-
-    applyTheme() {
-        const theme = Storage.load('theme') || 'light';
-        if (theme === 'dark') document.documentElement.classList.add('dark');
-    },
-
-    toggleTheme() {
-        const isDark = document.documentElement.classList.toggle('dark');
-        Storage.save('theme', isDark ? 'dark' : 'light');
     }
 };
 
-// 啟動 App
+// 暴露給 HTML onclick 使用
+window.addFoodToMeal = (id, name, kcal, unit) => App.addFood(id, name, kcal, unit);
+window.removeFood = (index) => {
+    App.state.meal.splice(index, 1);
+    App.renderMeal();
+};
+
 document.addEventListener('DOMContentLoaded', () => App.init());
