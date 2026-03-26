@@ -1,161 +1,199 @@
-import { Storage } from './storage.js';
-import { DietModule } from './modules/diet.js';
-import { FoodDatabase } from './database.js';
+// js/main.js
+import { FoodDatabase, WorkoutDatabase } from './database.js';
+
+const Storage = {
+    save(k, d) { localStorage.setItem('OmniV2_' + k, JSON.stringify(d)); },
+    load(k) { const d = localStorage.getItem('OmniV2_' + k); return d ? JSON.parse(d) : null; }
+};
 
 const App = {
     state: {
-        meal: [],
-        user: {}
+        user: Storage.load('user') || { weight: 70, targetW: 65, height: 175, age: 25, gender: 'male', activity: 1.55 },
+        meals: Storage.load('meals') || {}, // { 'YYYY-MM-DD': [] }
+        currentDate: new Date().toISOString().split('T')[0],
+        workoutType: 'cardio'
     },
 
     init() {
+        this.bindTabs();
         this.bindEvents();
-        this.loadUserStats();
+        this.renderDateSelector();
+        this.updateUserStats();
         this.renderMeal();
+    },
+
+    bindTabs() {
+        window.switchTab = (tabId) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active', 'hidden'));
+            document.querySelectorAll('.tab-content').forEach(el => {
+                if(el.id === 'tab-' + tabId) el.classList.add('active');
+                else el.classList.add('hidden');
+            });
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.target === 'tab-' + tabId) {
+                    btn.classList.add('text-indigo-600');
+                    btn.classList.remove('opacity-40');
+                } else {
+                    btn.classList.remove('text-indigo-600');
+                    btn.classList.add('opacity-40');
+                }
+            });
+        };
     },
 
     bindEvents() {
-        document.getElementById('saveBtn').addEventListener('click', () => this.handleUpdateStats());
+        document.getElementById('themeToggle').addEventListener('click', () => document.documentElement.classList.toggle('dark'));
         
-        const searchInput = document.getElementById('foodSearch');
-        searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
-
-        document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
-
-        // 點擊外部關閉搜尋
-        document.addEventListener('click', (e) => {
-            if (e.target.id !== 'foodSearch') document.getElementById('searchDropdown').classList.add('hidden');
+        // 設定保存
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            this.state.user = {
+                weight: parseFloat(document.getElementById('setWeight').value),
+                targetW: parseFloat(document.getElementById('setTargetW').value),
+                height: parseFloat(document.getElementById('setHeight').value),
+                age: parseFloat(document.getElementById('setAge').value),
+                gender: document.getElementById('setGender').value,
+                activity: parseFloat(document.getElementById('setActivity').value)
+            };
+            Storage.save('user', this.state.user);
+            this.updateUserStats();
+            alert("數據已更新！");
         });
+
+        // 搜尋食物
+        document.getElementById('foodSearch').addEventListener('input', e => this.searchFood(e.target.value));
+        // 搜尋訓練
+        document.getElementById('workoutSearch').addEventListener('input', e => this.searchWorkout(e.target.value));
+
+        // 載入表單預設值
+        document.getElementById('setWeight').value = this.state.user.weight || '';
+        document.getElementById('setTargetW').value = this.state.user.targetW || '';
+        document.getElementById('setHeight').value = this.state.user.height || '';
+        document.getElementById('setAge').value = this.state.user.age || '';
+        if(this.state.user.gender) document.getElementById('setGender').value = this.state.user.gender;
+        if(this.state.user.activity) document.getElementById('setActivity').value = this.state.user.activity;
     },
 
-    handleUpdateStats() {
-        const stats = {
-            age: parseFloat(document.getElementById('age').value),
-            gender: document.getElementById('gender').value,
-            height: parseFloat(document.getElementById('height').value),
-            weight: parseFloat(document.getElementById('weight').value),
-            targetW: parseFloat(document.getElementById('targetW').value),
-            activity: parseFloat(document.getElementById('activity').value)
-        };
+    // ======== 核心演算法 (TDEE, BMI, Target Calorie) ========
+    updateUserStats() {
+        const u = this.state.user;
+        if(!u.weight || !u.height) return;
 
-        if (Object.values(stats).some(v => isNaN(v) && typeof v !== 'string')) {
-            alert("Please fill in all stats.");
-            return;
-        }
-
-        const res = DietModule.calculate(stats);
-        Storage.save('user_stats', stats);
-        this.state.user = stats;
+        // BMI
+        const bmi = u.weight / Math.pow(u.height / 100, 2);
         
-        this.displayStats(res.tdee, stats.targetW);
+        // BMR (Mifflin-St Jeor)
+        let bmr = (10 * u.weight) + (6.25 * u.height) - (5 * u.age);
+        bmr = (u.gender === 'male') ? bmr + 5 : bmr - 161;
         
-        if (navigator.vibrate) navigator.vibrate(50);
-        // 自動關閉設定面板
-        document.querySelector('details').open = false;
+        // TDEE
+        const tdee = Math.round(bmr * u.activity);
+        
+        // Target Calorie (目標體重運算)
+        let targetCal = tdee;
+        let advice = "維持現狀";
+        if (u.targetW < u.weight) { targetCal = tdee - 300; advice = "建議產生熱量赤字 (減脂)"; }
+        else if (u.targetW > u.weight) { targetCal = tdee + 300; advice = "建議產生熱量盈餘 (增肌)"; }
+
+        // 更新 UI
+        document.getElementById('userBmi').innerText = bmi.toFixed(1);
+        document.getElementById('userTdee').innerText = tdee;
+        document.getElementById('userGoalCal').innerText = targetCal + " kcal";
+        document.getElementById('dietGoalKcal').innerText = targetCal;
+        document.getElementById('calorieAdvice').innerText = advice;
+
+        // 虛擬 7 天體重柱狀圖 (UI 示意)
+        const chart = document.getElementById('weightChart');
+        chart.innerHTML = Array(7).fill(0).map((_, i) => {
+            const h = 40 + Math.random() * 60;
+            return `<div class="w-8 bg-indigo-200 dark:bg-indigo-900 rounded-t-md relative flex items-end justify-center group" style="height: ${h}%">
+                <span class="absolute -top-6 text-[10px] opacity-0 group-hover:opacity-100">${u.weight}</span>
+            </div>`;
+        }).join('');
     },
 
-    displayStats(tdee, targetW) {
-        document.getElementById('tdeeVal').innerText = tdee.toLocaleString();
-        document.getElementById('targetWVal').innerText = targetW;
-        document.getElementById('resultArea').classList.remove('hidden');
-        this.updateProgress(0); // 初始進度條
-    },
-
-    loadUserStats() {
-        const saved = Storage.load('user_stats');
-        if (saved) {
-            this.state.user = saved;
-            document.getElementById('age').value = saved.age;
-            document.getElementById('gender').value = saved.gender;
-            document.getElementById('height').value = saved.height;
-            document.getElementById('weight').value = saved.weight;
-            document.getElementById('targetW').value = saved.targetW;
-            document.getElementById('activity').value = saved.activity;
-            
-            const res = DietModule.calculate(saved);
-            this.displayStats(res.tdee, saved.targetW);
+    // ======== 飲食未來 7 天邏輯 ========
+    renderDateSelector() {
+        const sel = document.getElementById('dateSelector');
+        let html = '';
+        for(let i=0; i<7; i++) {
+            let d = new Date();
+            d.setDate(d.getDate() + i);
+            const dateStr = d.toISOString().split('T')[0];
+            const display = i === 0 ? 'Today' : `${d.getMonth()+1}/${d.getDate()}`;
+            html += `<button onclick="window.selectDate('${dateStr}')" class="px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap ${i===0 ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}">${display}</button>`;
         }
+        sel.innerHTML = html;
     },
 
-    handleSearch(query) {
-        const dropdown = document.getElementById('searchDropdown');
-        if (!query) { dropdown.classList.add('hidden'); return; }
-
-        const results = FoodDatabase.filter(f => f.name.includes(query));
-        dropdown.innerHTML = results.map(f => `
-            <div class="p-4 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer flex justify-between items-center border-b dark:border-slate-700 last:border-0" 
-                 onclick="window.addFoodToMeal('${f.id}', '${f.name}', ${f.kcal}, '${f.unit}')">
-                <span class="font-bold text-sm">${f.name}</span>
-                <span class="text-[10px] opacity-40 px-2 py-1 bg-slate-100 dark:bg-slate-900 rounded-lg">${f.kcal} kcal / ${f.unit}</span>
+    // ======== 食物乘法與儲存 ========
+    searchFood(q) {
+        const drop = document.getElementById('searchDropdown');
+        if(!q) { drop.classList.add('hidden'); return; }
+        const res = FoodDatabase.filter(f => f.name.includes(q)).slice(0, 50); // 最多顯示50筆
+        drop.innerHTML = res.map(f => `
+            <div class="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer flex justify-between" onclick="window.addFood('${f.id}')">
+                <span class="font-bold">${f.name}</span><span class="text-xs opacity-50">${f.kcal}kcal / ${f.unit}</span>
             </div>
         `).join('');
-        dropdown.classList.remove('hidden');
+        drop.classList.remove('hidden');
     },
 
-    addFood(id, name, kcal, unit) {
-        const amount = prompt(`Enter quantity (${unit}):`, "1");
-        if (amount === null || isNaN(amount) || amount <= 0) return;
+    addFood(id) {
+        const food = FoodDatabase.find(f => f.id === id);
+        const amount = prompt(`你要加入多少份 (${food.unit})？ (輸入數字，如 2.5 表示 2.5 倍)`, "1");
+        if(!amount || isNaN(amount)) return;
 
-        const foodInfo = FoodDatabase.find(f => f.id === id);
-        this.state.meal.push({
-            ...foodInfo,
-            amount: parseFloat(amount),
-            ts: Date.now()
-        });
-        
+        if(!this.state.meals[this.state.currentDate]) this.state.meals[this.state.currentDate] = [];
+        this.state.meals[this.state.currentDate].push({ ...food, amount: parseFloat(amount) });
+        Storage.save('meals', this.state.meals);
         this.renderMeal();
         document.getElementById('foodSearch').value = '';
+        document.getElementById('searchDropdown').classList.add('hidden');
     },
 
     renderMeal() {
-        const list = document.getElementById('mealList');
-        const totalKcalEl = document.getElementById('mealTotalKcal');
-        const tdeeGoal = parseFloat(document.getElementById('tdeeVal').innerText.replace(/,/g, '')) || 1;
-        
-        let total = { kcal: 0, pro: 0, fat: 0, carb: 0 };
-
-        list.innerHTML = this.state.meal.map((item, index) => {
+        const list = this.state.meals[this.state.currentDate] || [];
+        let total = 0;
+        document.getElementById('mealList').innerHTML = list.map((item, idx) => {
             const kcal = Math.round(item.kcal * item.amount);
-            total.kcal += kcal;
-            total.pro += (item.protein || 0) * item.amount;
-            total.fat += (item.fat || 0) * item.amount;
-            total.carb += (item.carbs || 0) * item.amount;
-
+            total += kcal;
             return `
-                <div class="flex justify-between items-center bg-white/50 dark:bg-slate-900/40 p-4 rounded-2xl border border-white dark:border-slate-800">
-                    <div class="flex flex-col">
-                        <span class="font-bold text-sm">${item.name}</span>
-                        <span class="text-[10px] opacity-40">${item.amount} ${item.unit}</span>
+                <div class="flex justify-between items-center bg-white/60 dark:bg-slate-900/40 p-4 rounded-2xl border dark:border-slate-800">
+                    <div><p class="font-bold text-sm">${item.name}</p><p class="text-[10px] opacity-50">${item.amount} x ${item.unit}</p></div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-indigo-600">${kcal}</span>
+                        <button onclick="window.removeFood(${idx})" class="text-red-500 text-xs bg-red-50 p-1.5 rounded-full">✕</button>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <span class="font-black text-indigo-600 dark:text-indigo-400">${kcal}</span>
-                        <button onclick="window.removeFood(${index})" class="w-6 h-6 flex items-center justify-center bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full text-[10px]">✕</button>
-                    </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
-
-        totalKcalEl.innerText = `${total.kcal.toLocaleString()} kcal`;
-        document.getElementById('totalPro').innerText = Math.round(total.pro);
-        document.getElementById('totalFat').innerText = Math.round(total.fat);
-        document.getElementById('totalCarb').innerText = Math.round(total.carb);
-        
-        this.updateProgress((total.kcal / tdeeGoal) * 100);
+        document.getElementById('mealTotalKcal').innerText = total;
     },
 
-    updateProgress(percent) {
-        const bar = document.getElementById('kcalProgress');
-        if (bar) bar.style.width = `${Math.min(percent, 100)}%`;
-    },
-
-    toggleTheme() {
-        const isDark = document.documentElement.classList.toggle('dark');
-        Storage.save('theme', isDark ? 'dark' : 'light');
-        document.getElementById('themeToggle').innerText = isDark ? '☀️' : '🌙';
+    // ======== 訓練邏輯 (有氧/無氧) ========
+    searchWorkout(q) {
+        const drop = document.getElementById('workoutDropdown');
+        if(!q) { drop.classList.add('hidden'); return; }
+        const res = WorkoutDatabase.filter(w => w.type === this.state.workoutType && w.name.includes(q));
+        drop.innerHTML = res.map(w => `
+            <div class="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer" onclick="window.addWorkout('${w.name}')">
+                <span class="font-bold">${w.name}</span>
+            </div>
+        `).join('');
+        drop.classList.remove('hidden');
     }
 };
 
-window.addFoodToMeal = (id, name, kcal, unit) => App.addFood(id, name, kcal, unit);
-window.removeFood = (index) => { App.state.meal.splice(index, 1); App.renderMeal(); };
+window.selectDate = (date) => { App.state.currentDate = date; App.renderMeal(); alert(`已切換至 ${date} 的餐單`); };
+window.addFood = (id) => App.addFood(id);
+window.removeFood = (idx) => { App.state.meals[App.state.currentDate].splice(idx, 1); Storage.save('meals', App.state.meals); App.renderMeal(); };
+window.setWorkoutType = (type) => { App.state.workoutType = type; document.getElementById('workoutSearch').placeholder = `Search ${type}...`; };
+window.addWorkout = (name) => {
+    const mins = prompt(`輸入訓練分鐘數或組數:`, "30");
+    if(!mins) return;
+    document.getElementById('workoutList').innerHTML += `<div class="p-4 bg-white/50 rounded-2xl font-bold flex justify-between"><span>${name}</span><span class="text-indigo-600">${mins} min/sets</span></div>`;
+    document.getElementById('workoutSearch').value = '';
+    document.getElementById('workoutDropdown').classList.add('hidden');
+};
 
 document.addEventListener('DOMContentLoaded', () => App.init());
