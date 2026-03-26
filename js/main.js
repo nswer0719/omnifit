@@ -1,61 +1,78 @@
+// js/main.js
 import { Storage } from './storage.js';
 import { DietModule } from './modules/diet.js';
 
 const App = {
+    elements: {
+        inputs: ['age', 'gender', 'height', 'weight', 'activity'],
+        saveBtn: document.getElementById('saveBtn'),
+        tdeeVal: document.getElementById('tdeeVal'),
+        bmrVal: document.getElementById('bmrVal'),
+        resultArea: document.getElementById('resultArea'),
+        themeToggle: document.getElementById('themeToggle')
+    },
+
     init() {
+        this.loadSavedData();
         this.bindEvents();
         this.initTheme();
-        this.registerSW();
     },
 
     bindEvents() {
-        const calcBtn = document.getElementById('calcBtn');
-        if (calcBtn) {
-            calcBtn.addEventListener('click', () => this.handleTDEE());
-        }
-
-        const themeBtn = document.getElementById('themeToggle');
-        themeBtn.addEventListener('click', () => this.toggleTheme());
+        this.elements.saveBtn.addEventListener('click', () => this.handleUpdate());
+        this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
     },
 
-    handleTDEE() {
-        const data = {
-            age: parseFloat(document.getElementById('age').value),
-            gender: document.getElementById('gender').value,
-            height: parseFloat(document.getElementById('height').value),
-            weight: parseFloat(document.getElementById('weight').value),
-            activity: parseFloat(document.getElementById('activity').value)
-        };
+    handleUpdate() {
+        const stats = {};
+        let isValid = true;
 
-        if (Object.values(data).some(v => isNaN(v) && typeof v !== 'string')) {
-            alert("請填寫完整數值");
+        this.elements.inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el.value) isValid = false;
+            stats[id] = (id === 'gender') ? el.value : parseFloat(el.value);
+        });
+
+        if (!isValid) {
+            alert("請填寫所有欄位");
             return;
         }
 
-        const result = DietModule.calculateTDEE(data);
-        
+        // 計算
+        const results = DietModule.calculate(stats);
+
+        // 儲存
+        Storage.save('user_stats', stats);
+
         // UI 更新
-        document.getElementById('tdeeVal').innerText = result.toLocaleString();
-        document.getElementById('resultArea').classList.remove('hidden');
-        
-        // 儲存用戶數據
-        Storage.save('user_stats', data);
+        this.displayResults(results);
+    },
+
+    displayResults(results) {
+        this.elements.tdeeVal.innerText = results.tdee.toLocaleString();
+        this.elements.bmrVal.innerText = results.bmr.toLocaleString();
+        this.elements.resultArea.classList.remove('hidden');
+    },
+
+    loadSavedData() {
+        const saved = Storage.load('user_stats');
+        if (saved) {
+            this.elements.inputs.forEach(id => {
+                document.getElementById(id).value = saved[id];
+            });
+            const results = DietModule.calculate(saved);
+            this.displayResults(results);
+        }
     },
 
     initTheme() {
-        const isDark = Storage.load('theme') === 'dark';
-        if (isDark) document.documentElement.classList.add('dark');
+        const theme = Storage.load('theme') || 'light';
+        if (theme === 'dark') document.documentElement.classList.add('dark');
     },
 
     toggleTheme() {
         const isDark = document.documentElement.classList.toggle('dark');
         Storage.save('theme', isDark ? 'dark' : 'light');
-    },
-
-    registerSW() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js').catch(console.error);
-        }
     }
 };
 
