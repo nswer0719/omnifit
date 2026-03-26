@@ -2,498 +2,58 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>OmniFit</title>
+    <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="OmniFit">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="color-scheme" content="light dark">
-    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
     
-    <title>OmniFit - 國際多功能社群版</title>
-    <link rel="manifest" href="./manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
-<body class="px-5">
-    
-    <div id="restTimerDisplay" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-[6000] timer-popup bg-indigo-600/95 backdrop-blur-xl text-white px-8 py-3 rounded-full font-black text-sm shadow-2xl border border-indigo-400/30 flex items-center gap-3">
-        <span class="animate-pulse">⏳</span>
-        <span id="restTimerText" data-i18n="rest_timer">休息: 00:00</span>
-        <button onclick="stopRestTimer()" class="ml-2 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-xs btn-press">✕</button>
-    </div>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
 
-    <div class="max-w-2xl mx-auto relative z-10">
-        <header class="flex justify-between items-center mb-8 pt-4">
-            <div class="flex flex-col">
-                <h1 class="text-4xl font-black tracking-tighter text-slate-900 dark:text-white">Omni<span class="text-blue-600">Fit</span></h1>
-                <span class="text-[9px] font-black opacity-40 uppercase tracking-[0.2em] mt-1 text-slate-800 dark:text-gray-300">Global Community Edition</span>
-            </div>
-            <button onclick="toggleDarkMode()" id="themeBtn" class="w-14 h-14 rounded-full card flex items-center justify-center text-2xl btn-press text-slate-800 dark:text-white">🌙</button>
+    <main class="max-w-md mx-auto min-h-screen px-6 pt-safe-top pb-safe-bottom">
+        <header class="py-8 flex justify-between items-center">
+            <h1 class="text-3xl font-extrabold tracking-tight text-indigo-600 dark:text-indigo-400">OmniFit</h1>
+            <button id="themeToggle" class="p-2 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-md shadow-sm">
+                <span class="dark:hidden">🌙</span><span class="hidden dark:inline">☀️</span>
+            </button>
         </header>
 
-        <div id="mealHubTab" class="tab-content active">
-            <div class="sub-nav-container mb-8 shadow-sm">
-                <div onclick="switchMealSub('today')" id="sub-today" class="sub-tab active" data-i18n="nav_today">今日清單</div>
-                <div onclick="switchMealSub('planner')" id="sub-planner" class="sub-tab" data-i18n="nav_7day">7日規劃</div>
-                <div onclick="switchMealSub('library')" id="sub-library" class="sub-tab" data-i18n="nav_recipe">食譜庫</div>
-            </div>
-
-            <div id="subContent-today" class="meal-sub-content">
-                <div class="card p-8 mb-6 bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-none shadow-xl shadow-blue-500/20 relative overflow-hidden">
-                    <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-                    <div class="flex justify-between items-end relative z-10">
-                        <div>
-                            <h3 class="font-black text-sm opacity-90 mb-1" id="todayGoalLabel">計算中...</h3>
-                            <p class="text-[11px] font-bold opacity-75 uppercase tracking-widest">Daily Goal</p>
-                        </div>
-                        <div class="text-right">
-                            <span id="todayGoalKcal" class="text-5xl font-black tracking-tighter">0</span>
-                            <span class="text-xs opacity-75 ml-1 font-bold">kcal</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <div class="card p-6 flex flex-col justify-between">
-                        <div class="flex justify-between items-start mb-4">
-                            <h3 class="font-black text-blue-600 dark:text-blue-400 text-sm" data-i18n="water_title">飲水 💧</h3>
-                            <span id="waterCurrent" class="text-lg font-black text-blue-600 dark:text-blue-400">0ml</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 mt-auto">
-                            <button onclick="addWater(-250)" class="bg-red-100 dark:bg-red-900/40 text-red-600 py-2 rounded-xl text-[10px] font-black btn-press">-250</button>
-                            <button onclick="addWater(250)" class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 py-2 rounded-xl text-[10px] font-black btn-press">+250</button>
-                            <button onclick="addWater(-500)" class="bg-red-200 dark:bg-red-900/60 text-red-700 py-2 rounded-xl text-[10px] font-black btn-press">-500</button>
-                            <button onclick="addWater(500)" class="bg-blue-200 dark:bg-blue-800/60 text-blue-800 dark:text-blue-300 py-2 rounded-xl text-[10px] font-black btn-press">+500</button>
-                        </div>
-                    </div>
-                    <div class="card p-6 flex items-center justify-center relative">
-                        <div class="w-full h-full absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at center, #3b82f6 1px, transparent 1px); background-size: 10px 10px;"></div>
-                        <div class="w-24 h-24 relative z-10"><canvas id="todayMacroChart"></canvas></div>
-                    </div>
-                </div>
-
-                <div class="card p-6 mb-8 grid grid-cols-4 gap-2 text-center divide-x divide-gray-200 dark:divide-gray-700">
-                    <div><p class="text-[10px] font-black text-blue-600 uppercase mb-1">PRO</p><p id="sumP" class="text-sm font-black text-slate-800 dark:text-white">0g</p></div>
-                    <div><p class="text-[10px] font-black text-emerald-600 uppercase mb-1">CARB</p><p id="sumC" class="text-sm font-black text-slate-800 dark:text-white">0g</p></div>
-                    <div><p class="text-[10px] font-black text-amber-500 uppercase mb-1">FAT</p><p id="sumF" class="text-sm font-black text-slate-800 dark:text-white">0g</p></div>
-                    <div><p class="text-[10px] font-black text-purple-600 uppercase mb-1">KCAL</p><p id="sumKcal" class="text-sm font-black text-slate-800 dark:text-white">0</p></div>
-                </div>
-
-                <div class="card p-8 mb-8 border-b-8 border-blue-500 relative z-20">
-                    <h3 class="font-black text-lg mb-6 flex items-center gap-2 text-slate-800 dark:text-white" data-i18n="add_diet">🍽️ 新增飲食</h3>
-                    <select id="mealTime" class="w-full p-5 mb-5 text-sm">
-                        <option value="breakfast" data-i18n="meal_breakfast">🌅 早餐時段</option><option value="lunch" data-i18n="meal_lunch">☀️ 午餐時段</option><option value="dinner" data-i18n="meal_dinner">🌙 晚餐時段</option><option value="snack" data-i18n="meal_snack">🍏 點心與其他</option>
-                    </select>
-                    <div class="relative mb-5">
-                        <input id="foodSearch" type="text" placeholder="🔍 Search..." class="w-full p-6 text-lg outline-none text-slate-800 dark:text-white" oninput="searchFood(this.value, 'today')">
-                        <div id="searchRes" class="suggestion-box hidden no-scrollbar"></div>
-                    </div>
-                    
-                    <div class="flex items-center justify-between mb-5 bg-gray-100 dark:bg-gray-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700">
-                        <span class="text-sm font-black text-slate-800 dark:text-white" data-i18n="qty">份量 / Qty</span>
-                        <div class="flex items-center gap-4">
-                            <button onclick="changeFoodQty(-1, 'today')" class="w-10 h-10 rounded-full bg-white dark:bg-gray-700 text-blue-600 font-black shadow-sm btn-press">-</button>
-                            <input id="foodQty" type="number" value="1" step="0.5" class="w-16 text-center font-black text-lg bg-transparent border-none text-slate-800 dark:text-white" onchange="updateFoodMacros('today')">
-                            <button onclick="changeFoodQty(1, 'today')" class="w-10 h-10 rounded-full bg-blue-600 text-white font-black shadow-sm btn-press">+</button>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-4 mb-8">
-                        <div class="relative"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black opacity-40 text-slate-800 dark:text-gray-300">P</span><input id="pIn" type="number" placeholder="0" class="w-full p-5 pl-8 text-center text-lg text-slate-800 dark:text-white"></div>
-                        <div class="relative"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black opacity-40 text-slate-800 dark:text-gray-300">C</span><input id="cIn" type="number" placeholder="0" class="w-full p-5 pl-8 text-center text-lg text-slate-800 dark:text-white"></div>
-                        <div class="relative"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black opacity-40 text-slate-800 dark:text-gray-300">F</span><input id="fIn" type="number" placeholder="0" class="w-full p-5 pl-8 text-center text-lg text-slate-800 dark:text-white"></div>
-                    </div>
-                    <button onclick="addLog()" class="w-full bg-blue-600 text-white p-6 rounded-3xl font-black text-lg shadow-xl shadow-blue-500/30 btn-press" data-i18n="btn_save_record">儲存紀錄</button>
-                </div>
-                
-                <div id="todayMealDisplay" class="space-y-6 mb-10 text-slate-800 dark:text-white"></div>
-            </div>
-
-            <div id="subContent-planner" class="meal-sub-content hidden">
-                <div class="flex space-x-3 overflow-x-auto no-scrollbar mb-8 pb-4 px-2" id="plannerDateBar"></div>
-                
-                <div class="card p-6 mb-6 bg-gradient-to-br from-orange-400 to-red-500 text-white border-none shadow-lg shadow-orange-500/20 flex justify-between items-center relative overflow-hidden">
-                    <div class="flex items-center gap-6 relative z-10 w-full">
-                        <div class="w-20 h-20 flex-shrink-0 bg-white/20 p-2 rounded-full backdrop-blur-md">
-                            <canvas id="planMacroChart"></canvas>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="font-black text-sm opacity-90 mb-2" data-i18n="daily_plan_total">當日規劃總額</h3>
-                            <div class="grid grid-cols-2 gap-y-1 gap-x-2">
-                                <div><p class="text-[9px] font-black text-blue-200">PRO</p><p id="planP" class="text-[11px] font-black">0g</p></div>
-                                <div><p class="text-[9px] font-black text-green-200">CARB</p><p id="planC" class="text-[11px] font-black">0g</p></div>
-                                <div><p class="text-[9px] font-black text-yellow-200">FAT</p><p id="planF" class="text-[11px] font-black">0g</p></div>
-                                <div><p class="text-[9px] font-black text-white">KCAL</p><p id="planTotalKcal" class="text-[11px] font-black">0 kcal</p></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card p-8 mb-8 border-b-8 border-orange-500">
-                    <h2 class="text-sm font-black text-slate-600 dark:text-gray-300 mb-6 flex items-center gap-2"><span data-i18n="edit_plan">📅 編排</span> <span id="selectedPlanDateText" class="text-orange-500"></span></h2>
-                    <select id="planMealTime" class="w-full p-5 mb-5 text-sm">
-                        <option value="breakfast" data-i18n="meal_breakfast">🌅 早餐</option><option value="lunch" data-i18n="meal_lunch">☀️ 午餐</option><option value="dinner" data-i18n="meal_dinner">🌙 晚餐</option><option value="snack" data-i18n="meal_snack">🍏 點心</option>
-                    </select>
-                    <div class="relative mb-5">
-                        <input id="planSearch" type="text" placeholder="🔍 Search..." class="w-full p-6 text-lg outline-none text-slate-800 dark:text-white" oninput="searchFood(this.value, 'plan')">
-                        <div id="planSearchRes" class="suggestion-box hidden no-scrollbar"></div>
-                    </div>
-
-                    <div class="flex items-center justify-between mb-5 bg-gray-100 dark:bg-gray-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700">
-                        <span class="text-sm font-black text-slate-800 dark:text-white" data-i18n="qty">份量 / Qty</span>
-                        <div class="flex items-center gap-4">
-                            <button onclick="changeFoodQty(-1, 'plan')" class="w-10 h-10 rounded-full bg-white dark:bg-gray-700 text-orange-500 font-black shadow-sm btn-press">-</button>
-                            <input id="planQty" type="number" value="1" step="0.5" class="w-16 text-center font-black text-lg bg-transparent border-none text-slate-800 dark:text-white" onchange="updateFoodMacros('plan')">
-                            <button onclick="changeFoodQty(1, 'plan')" class="w-10 h-10 rounded-full bg-orange-500 text-white font-black shadow-sm btn-press">+</button>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-4 mb-8">
-                        <input id="planPIn" type="number" placeholder="P" class="p-5 text-center text-lg text-slate-800 dark:text-white"><input id="planCIn" type="number" placeholder="C" class="p-5 text-center text-lg text-slate-800 dark:text-white"><input id="planFIn" type="number" placeholder="F" class="p-5 text-center text-lg text-slate-800 dark:text-white">
-                    </div>
-                    <button onclick="addPlan()" class="w-full bg-orange-500 text-white p-6 rounded-3xl font-black text-lg shadow-xl shadow-orange-500/30 btn-press" data-i18n="btn_add_list">加入清單</button>
-                </div>
-                <div id="planDetailList" class="space-y-6 text-slate-800 dark:text-white"></div>
-            </div>
-
-            <div id="subContent-library" class="meal-sub-content hidden text-slate-800 dark:text-white">
-                <div class="card p-8 mb-8 border-b-8 border-emerald-500">
-                    <h2 class="text-lg font-black mb-6 flex items-center gap-2" data-i18n="create_recipe">🥑 建立食譜組合</h2>
-                    <input id="newRecipeName" type="text" placeholder="Recipe Name" class="w-full p-6 mb-6 text-lg outline-none font-bold text-slate-800 dark:text-white">
-                    <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-3xl mb-6 border-2 border-dashed border-gray-300 dark:border-gray-600">
-                        <div class="relative mb-6">
-                            <input id="recipeIngSearch" type="text" placeholder="🔍 Search..." class="w-full p-5 outline-none text-sm text-slate-800 dark:text-white" oninput="searchFood(this.value, 'recipe')">
-                            <div id="recipeSearchRes" class="suggestion-box hidden"></div>
-                        </div>
-                        <div class="flex items-center gap-2 mb-4">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <p class="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest" data-i18n="selected_ingredients">已選食材清單</p>
-                        </div>
-                        <ul id="tempIngList" class="space-y-3 text-slate-800 dark:text-white"></ul>
-                    </div>
-                    <button onclick="saveRecipe()" class="w-full bg-emerald-500 text-white p-6 rounded-3xl font-black text-lg shadow-xl shadow-emerald-500/30 btn-press" data-i18n="btn_save_recipe">封裝食譜</button>
-                </div>
-                <div id="savedRecipesList" class="space-y-4"></div>
-            </div>
-        </div>
-
-        <div id="gymTab" class="tab-content">
-            
-            <div class="sub-nav-container mb-6 shadow-sm">
-                <div onclick="switchGymSub('today')" id="gsub-today" class="sub-tab active" data-i18n="nav_today_train">今日訓練</div>
-                <div onclick="switchGymSub('planner')" id="gsub-planner" class="sub-tab" data-i18n="nav_7day_train">7日課表</div>
-                <div onclick="switchGymSub('history')" id="gsub-history" class="sub-tab" data-i18n="nav_history">歷史紀錄</div>
-            </div>
-
-            <div id="gsubContent-today" class="gym-sub-content text-slate-800 dark:text-white">
-                <div class="card p-6 mb-6 h-36 relative overflow-hidden flex flex-col justify-between shadow-sm">
-                    <div class="flex justify-between items-start z-10 relative">
-                        <h3 class="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest" data-i18n="vol_trend">近 7 日容量趨勢</h3>
-                        <span class="text-[10px] bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-lg font-bold">Volume</span>
-                    </div>
-                    <div class="absolute bottom-0 left-0 right-0 h-24 z-0">
-                        <canvas id="gymVolumeChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="card p-8 mb-8 border-b-8 border-indigo-500 relative">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-black flex items-center gap-2" data-i18n="workout_log">🏋️‍♂️ 訓練日誌</h2>
-                    </div>
-
-                    <div class="flex gap-2 mb-6 bg-gray-200 dark:bg-gray-800 p-1.5 rounded-2xl">
-                        <button id="btnStrength" onclick="setGymType('strength')" class="type-btn active" data-i18n="strength">重量訓練</button>
-                        <button id="btnCardio" onclick="setGymType('cardio')" class="type-btn" data-i18n="cardio">有氧運動</button>
-                    </div>
-                    
-                    <div class="mb-6 relative">
-                        <input id="gName" type="text" placeholder="🔍 Search..." class="w-full p-5 outline-none font-bold text-sm shadow-sm text-slate-800 dark:text-white" oninput="searchGym(this.value, 'today')">
-                        <div id="gymSearchRes" class="suggestion-box hidden no-scrollbar text-slate-800 dark:text-white"></div>
-                    </div>
-                    
-                    <div id="strengthInputs" class="grid grid-cols-3 gap-4 mb-8 bg-gray-100 dark:bg-gray-800/50 p-4 rounded-3xl border border-gray-200 dark:border-gray-700">
-                        <div class="text-center">
-                            <p class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase mb-2" data-i18n="weight_kg">重量 (KG)</p>
-                            <input id="gW" type="number" placeholder="0" class="w-full p-4 text-center font-black text-2xl bg-white dark:bg-gray-900 shadow-sm border-none text-slate-800 dark:text-white">
-                        </div>
-                        <div class="text-center">
-                            <p class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase mb-2" data-i18n="sets">組數 (SETS)</p>
-                            <input id="gS" type="number" placeholder="0" class="w-full p-4 text-center font-black text-2xl bg-white dark:bg-gray-900 shadow-sm border-none text-slate-800 dark:text-white">
-                        </div>
-                        <div class="text-center">
-                            <p class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase mb-2" data-i18n="reps">次數 (REPS)</p>
-                            <input id="gR" type="number" placeholder="0" class="w-full p-4 text-center font-black text-2xl bg-white dark:bg-gray-900 shadow-sm border-none text-slate-800 dark:text-white">
-                        </div>
-                    </div>
-
-                    <div id="cardioInputs" class="hidden grid grid-cols-2 gap-4 mb-8 bg-emerald-50/50 dark:bg-emerald-900/10 p-4 rounded-3xl border border-emerald-100 dark:border-emerald-800/30">
-                        <div class="text-center">
-                            <p class="text-[10px] font-black text-emerald-700 dark:text-emerald-500 uppercase mb-2" data-i18n="time_mins">時間 (分鐘)</p>
-                            <input id="gMins" type="number" placeholder="0" class="w-full p-4 text-center font-black text-2xl bg-white dark:bg-gray-900 shadow-sm border-none text-slate-800 dark:text-white">
-                        </div>
-                        <div class="text-center">
-                            <p class="text-[10px] font-black text-emerald-700 dark:text-emerald-500 uppercase mb-2" data-i18n="distance_km">距離 (KM)</p>
-                            <input id="gKm" type="number" placeholder="0" class="w-full p-4 text-center font-black text-2xl bg-white dark:bg-gray-900 shadow-sm border-none text-slate-800 dark:text-white">
-                        </div>
-                    </div>
-
-                    <div class="flex gap-3">
-                        <button onclick="addGym()" class="flex-1 bg-indigo-600 text-white p-6 rounded-3xl font-black text-lg shadow-xl shadow-indigo-500/30 btn-press" id="btnSaveGym" data-i18n="btn_save_record">新增紀錄</button>
-                        
-                        <div class="flex items-center bg-indigo-100 dark:bg-indigo-900/60 rounded-3xl p-2 px-3 shadow-inner border border-indigo-200 dark:border-indigo-800">
-                            <input id="restTimeInput" type="number" value="90" class="w-12 bg-transparent text-indigo-700 dark:text-indigo-300 font-black text-center text-lg outline-none">
-                            <span class="text-[10px] text-indigo-500 font-bold mr-2">s</span>
-                            <button onclick="startRestTimer(document.getElementById('restTimeInput').value)" class="w-12 h-12 bg-white dark:bg-gray-800 text-indigo-600 rounded-full font-black shadow-sm flex justify-center items-center btn-press text-lg">⏱️</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="flex justify-between items-end mb-6 px-2">
-                    <h3 class="font-black text-lg text-slate-800 dark:text-white" data-i18n="today_list">今日清單</h3>
-                    <div class="bg-indigo-100 dark:bg-indigo-900/40 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800">
-                        <p class="text-[10px] font-black opacity-70 uppercase text-indigo-700 dark:text-indigo-300">Vol: <span id="dailyVolume" class="text-sm ml-1">0</span></p>
-                    </div>
-                </div>
-                <div id="gymLogs" class="space-y-4 mb-10 text-slate-800 dark:text-white"></div>
-            </div>
-
-            <div id="gsubContent-planner" class="gym-sub-content hidden text-slate-800 dark:text-white">
-                <div class="flex space-x-3 overflow-x-auto no-scrollbar mb-8 pb-4 px-2" id="gymPlannerDateBar"></div>
-                <div class="card p-8 mb-8 border-b-8 border-indigo-500 relative">
-                    <h2 class="text-xl font-black mb-6 flex items-center gap-2"><span data-i18n="edit_plan">🗓️ 編排</span> <span id="selectedGymPlanDayText" class="text-indigo-500 ml-2"></span></h2>
-                    
-                    <div class="mb-6 relative">
-                        <input id="gPlanName" type="text" placeholder="🔍 Search..." class="w-full p-5 outline-none font-bold text-sm shadow-sm text-slate-800 dark:text-white" oninput="searchGym(this.value, 'plan')">
-                        <div id="gymPlanSearchRes" class="suggestion-box hidden no-scrollbar text-slate-800 dark:text-white"></div>
-                    </div>
-                    
-                    <div class="grid grid-cols-3 gap-4 mb-8 bg-gray-100 dark:bg-gray-800/50 p-4 rounded-3xl border border-gray-200 dark:border-gray-700">
-                        <div class="text-center">
-                            <p class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase mb-2">KG</p>
-                            <input id="gPlanW" type="number" placeholder="0" class="w-full p-4 text-center font-black text-2xl bg-white dark:bg-gray-900 shadow-sm border-none text-slate-800 dark:text-white">
-                        </div>
-                        <div class="text-center">
-                            <p class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase mb-2">SETS</p>
-                            <input id="gPlanS" type="number" placeholder="0" class="w-full p-4 text-center font-black text-2xl bg-white dark:bg-gray-900 shadow-sm border-none text-slate-800 dark:text-white">
-                        </div>
-                        <div class="text-center">
-                            <p class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase mb-2">REPS</p>
-                            <input id="gPlanR" type="number" placeholder="0" class="w-full p-4 text-center font-black text-2xl bg-white dark:bg-gray-900 shadow-sm border-none text-slate-800 dark:text-white">
-                        </div>
-                    </div>
-                    <button onclick="addGymPlan()" class="w-full bg-indigo-500 text-white p-6 rounded-3xl font-black text-lg shadow-xl shadow-indigo-500/30 btn-press" data-i18n="btn_add_list">加入每週課表</button>
-                </div>
-                <div id="gymPlanList" class="space-y-4 mb-10 text-slate-800 dark:text-white"></div>
-            </div>
-
-            <div id="gsubContent-history" class="gym-sub-content hidden pb-10 text-slate-800 dark:text-white">
-                <div class="card p-6 border-b-4 border-indigo-400 dark:border-indigo-600 bg-white dark:bg-gray-800 mb-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <button onclick="changeCalMonth(-1)" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center font-black btn-press">&lt;</button>
-                        <h3 id="calMonthYear" class="font-black text-indigo-600 dark:text-indigo-400 text-lg">2026 / 03</h3>
-                        <button onclick="changeCalMonth(1)" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center font-black btn-press">&gt;</button>
-                    </div>
-                    
-                    <div class="cal-grid mb-2 text-xs font-black text-slate-400 dark:text-slate-500">
-                        <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
-                    </div>
-                    <div id="calGrid" class="cal-grid">
-                        </div>
-                </div>
-                
-                <div id="gymHistoryList" class="space-y-4">
-                    <p class="text-center opacity-40 font-black py-10 text-sm" data-i18n="select_date_cal">請選擇日曆上的日期</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="communityTab" class="tab-content">
-            
-            <div class="sub-nav-container mb-6 shadow-sm">
-                <div onclick="switchCommSub('feed')" id="csub-feed" class="sub-tab active" data-i18n="comm_feed">動態牆</div>
-                <div onclick="switchCommSub('post')" id="csub-post" class="sub-tab" data-i18n="my_post">發佈新動態</div>
-            </div>
-
-            <div id="csubContent-feed" class="comm-sub-content">
-                <div class="mb-6 relative">
-                    <input id="socialSearch" type="text" placeholder="🔍 搜尋用戶或內容..." data-i18n="search_comm" class="w-full p-5 outline-none font-bold text-sm shadow-sm text-slate-800 dark:text-white" oninput="renderFeed()">
-                </div>
-                <div id="feedList" class="space-y-6 pb-10">
-                    </div>
-            </div>
-
-            <div id="csubContent-post" class="comm-sub-content hidden">
-                <div class="card p-6 mb-8 border-t-8 border-pink-500 relative overflow-hidden">
-                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-pink-100 dark:bg-pink-900/30 rounded-full opacity-50 blur-3xl pointer-events-none"></div>
-                    
-                    <div class="flex items-center gap-3 mb-6 relative z-10">
-                        <div class="w-12 h-12 bg-gradient-to-tr from-pink-500 to-orange-400 rounded-full flex items-center justify-center text-white font-black shadow-md">Me</div>
-                        <div>
-                            <h2 class="text-lg font-black text-slate-800 dark:text-white" data-i18n="my_post">發佈新動態</h2>
-                            <p class="text-[10px] font-bold text-slate-500 dark:text-gray-400" data-i18n="comm_desc">分享您的努力，激勵更多人！</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-5 relative z-10">
-                        <select id="postType" class="w-full p-4 font-black text-sm text-slate-800 dark:text-white shadow-sm bg-gray-100 dark:bg-gray-800 border-none">
-                            <option value="diet">🍱 美味飲食分享</option>
-                            <option value="training">💪 訓練動作紀錄</option>
-                            <option value="physique">👤 體態轉變</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-4 relative z-10 p-4 bg-gray-50 dark:bg-gray-800/80 rounded-2xl border border-gray-200 dark:border-gray-700">
-                        <textarea id="postText" class="social-input w-full" rows="3" placeholder="今天練得如何？寫下一些心得紀錄吧..." data-i18n="post_placeholder"></textarea>
-                    </div>
-
-                    <div class="mb-4 relative z-10">
-                        <label class="video-upload-label flex flex-col items-center justify-center w-full h-32 rounded-2xl cursor-pointer transition-colors p-4 text-center">
-                            <span class="text-3xl mb-2">📸 / 📹</span>
-                            <span class="text-sm font-black text-pink-600 dark:text-pink-400" data-i18n="upload_media">點擊上傳相片或短片</span>
-                            <input type="file" id="mediaUpload" accept="image/*,video/*" class="hidden">
-                        </label>
-                    </div>
-
-                    <div id="mediaPreviewContainer" class="hidden relative z-10 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                        <div id="mediaBox" class="rounded-2xl overflow-hidden shadow-md bg-black flex justify-center items-center min-h-[150px]">
-                            </div>
-                    </div>
-                    
-                    <button onclick="publishPost()" class="w-full bg-pink-500 text-white p-4 rounded-2xl font-black text-sm shadow-xl shadow-pink-500/30 mt-6 btn-press relative z-10" data-i18n="btn_publish">發佈至動態牆</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="userTab" class="tab-content text-slate-800 dark:text-white">
-            <div class="card p-8 mb-8 border-t-8 border-gray-800 dark:border-gray-500 relative overflow-hidden">
-                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-gray-100 dark:bg-gray-800 rounded-full opacity-50 blur-3xl"></div>
-                <h2 class="text-2xl font-black mb-8 relative z-10" data-i18n="user_core">個人數據核心</h2>
-                
-                <div class="grid grid-cols-2 gap-5 mb-6 relative z-10">
-                    <div class="bg-gray-100 dark:bg-gray-800/80 p-5 rounded-3xl border border-gray-200 dark:border-gray-700"><p class="text-[10px] font-black text-slate-500 dark:text-gray-400 mb-2 uppercase" data-i18n="curr_weight">目前體重 (KG)</p><input id="uW" type="number" class="w-full p-4 bg-white dark:bg-gray-900 text-xl text-center text-slate-800 dark:text-white"></div>
-                    <div class="bg-blue-50 dark:bg-blue-900/30 p-5 rounded-3xl border border-blue-200 dark:border-blue-800"><p class="text-[10px] font-black text-blue-600 dark:text-blue-400 mb-2 uppercase" data-i18n="target_weight">目標體重 (KG)</p><input id="uTargetW" type="number" class="w-full p-4 bg-white dark:bg-gray-900 text-xl text-center border-2 border-blue-200 dark:border-blue-600 text-slate-800 dark:text-white"></div>
-                </div>
-                
-                <div class="grid grid-cols-3 gap-4 mb-8 relative z-10">
-                    <div><p class="text-[10px] font-black text-slate-500 dark:text-gray-400 mb-2 pl-2" data-i18n="gender">性別</p><select id="uGender" class="w-full p-4 text-center text-slate-800 dark:text-white"><option value="male" data-i18n="male">男</option><option value="female" data-i18n="female">女</option></select></div>
-                    <div><p class="text-[10px] font-black text-slate-500 dark:text-gray-400 mb-2 pl-2" data-i18n="age">年齡</p><input id="uA" type="number" class="w-full p-4 text-center text-slate-800 dark:text-white"></div>
-                    <div><p class="text-[10px] font-black text-slate-500 dark:text-gray-400 mb-2 pl-2" data-i18n="height">身高 (CM)</p><input id="uH" type="number" class="w-full p-4 text-center text-slate-800 dark:text-white"></div>
-                </div>
-                
-                <div class="mb-8 relative z-10">
-                    <p class="text-[10px] font-black text-slate-500 dark:text-gray-400 mb-2 pl-2 uppercase tracking-widest" data-i18n="pal">活動量係數 (PAL)</p>
-                    <select id="uAct" class="w-full p-5 text-sm font-bold shadow-sm text-slate-800 dark:text-white">
-                        <option value="1.2" data-i18n="pal_1_2">💻 1.2 久坐 (辦公族、幾乎不運動)</option>
-                        <option value="1.375" data-i18n="pal_1_375">🚶 1.375 輕度 (每週輕鬆活動 1-3 天)</option>
-                        <option value="1.465" data-i18n="pal_1_465">🏃 1.465 中輕度 (每週規律健身 3-4 天)</option>
-                        <option value="1.55" data-i18n="pal_1_55">🏃 1.55 中度 (每週規律訓練 5-6 天)</option>
-                        <option value="1.725" data-i18n="pal_1_725">🏋️ 1.725 高度 (每日重訓或勞動力工作)</option>
-                        <option value="1.9" data-i18n="pal_1_9">🔥 1.9 極高 (專業運動員、長期競技)</option>
+        <section id="diet-module" class="glass-card p-6 rounded-3xl mb-8">
+            <h2 class="text-xl font-bold mb-4 flex items-center"><span class="mr-2">🔥</span> TDEE 計算器</h2>
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" id="age" placeholder="年齡" class="input-field">
+                    <select id="gender" class="input-field">
+                        <option value="male">男</option>
+                        <option value="female">女</option>
                     </select>
                 </div>
-                
-                <button onclick="updateUser()" class="w-full bg-gray-900 dark:bg-blue-600 text-white p-6 rounded-3xl font-black text-lg mb-8 shadow-xl btn-press relative z-10" data-i18n="btn_sync_data">同步運算核心數據</button>
-                
-                <div class="grid grid-cols-3 gap-3 relative z-10 mb-6">
-                    <div class="bg-gray-100 dark:bg-gray-800/80 p-5 rounded-3xl text-center border border-gray-200 dark:border-gray-700"><p class="text-[9px] font-black text-slate-500 dark:text-gray-400 uppercase mb-1" data-i18n="label_tdee">維持 TDEE</p><p id="dispTdee" class="text-xl font-black text-gray-800 dark:text-gray-200">--</p></div>
-                    <div class="bg-gray-100 dark:bg-gray-800/80 p-5 rounded-3xl text-center border border-gray-200 dark:border-gray-700"><p class="text-[9px] font-black text-slate-500 dark:text-gray-400 uppercase mb-1" data-i18n="label_bmi">身體質量 BMI</p><p id="dispBmi" class="text-xl font-black text-gray-800 dark:text-gray-200">--</p></div>
-                    <div class="bg-blue-50 dark:bg-blue-900/30 p-5 rounded-3xl text-center border border-blue-200 dark:border-blue-800/50"><p class="text-[9px] font-black text-blue-700 dark:text-blue-400 uppercase mb-1" data-i18n="label_target_dist">距目標體重</p><p id="dispToTarget" class="text-xl font-black text-blue-600 dark:text-blue-400">--</p></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" id="height" placeholder="身高 (cm)" class="input-field">
+                    <input type="number" id="weight" placeholder="體重 (kg)" class="input-field">
                 </div>
-
-                <div class="bg-gradient-to-br from-gray-900 to-gray-700 dark:from-gray-800 dark:to-gray-950 text-white p-8 rounded-[32px] shadow-2xl relative z-10 overflow-hidden">
-                    <div class="absolute right-0 top-0 w-32 h-32 bg-blue-500/20 blur-3xl rounded-full"></div>
-                    <p class="text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest relative z-10" data-i18n="ai_target">AI 建議攝取目標</p>
-                    <div class="flex items-end gap-2 mb-2 relative z-10">
-                        <span id="statGoalKcal" class="text-5xl font-black text-blue-400 tracking-tighter">0</span>
-                        <span class="text-sm font-bold text-gray-400 pb-2">kcal / 日</span>
-                    </div>
-                    <p id="statGoalLogic" class="text-xs font-bold text-white bg-white/10 backdrop-blur-sm inline-block px-4 py-2 rounded-xl relative z-10 shadow-inner">請先同步數據</p>
-                </div>
+                <select id="activity" class="input-field">
+                    <option value="1.2">久坐 (不運動)</option>
+                    <option value="1.375">輕度 (每週 1-3 天)</option>
+                    <option value="1.55">中度 (每週 3-5 天)</option>
+                    <option value="1.725">高度 (每週 6-7 天)</option>
+                </select>
+                <button id="calcBtn" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all">計算結果</button>
             </div>
-            
-            <div class="card p-8 mb-6">
-                <h3 class="text-xs font-black text-slate-500 dark:text-gray-400 uppercase mb-4 tracking-widest" data-i18n="calorie_trend">熱量攝取趨勢</h3>
-                <div class="h-48"><canvas id="trendChart"></canvas></div>
-            </div>
+        </section>
 
-            <div class="card p-8 mb-8">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest" data-i18n="weight_chart">體重軌跡</h3>
-                </div>
-                <div class="h-48 mb-4"><canvas id="weightChart"></canvas></div>
-                <div class="flex justify-center gap-2">
-                    <button onclick="setWeightRange(7)" class="px-4 py-1.5 bg-gray-200 dark:bg-gray-800 rounded-xl text-xs font-black text-gray-700 dark:text-gray-300 btn-press" data-i18n="range_7">7天</button>
-                    <button onclick="setWeightRange(30)" class="px-4 py-1.5 bg-gray-200 dark:bg-gray-800 rounded-xl text-xs font-black text-gray-700 dark:text-gray-300 btn-press" data-i18n="range_30">30天</button>
-                    <button onclick="setWeightRange('all')" class="px-4 py-1.5 bg-gray-200 dark:bg-gray-800 rounded-xl text-xs font-black text-gray-700 dark:text-gray-300 btn-press" data-i18n="range_all">全部</button>
-                </div>
+        <div id="resultArea" class="hidden">
+            <div class="glass-card-accent p-6 rounded-3xl text-center">
+                <p class="text-sm font-semibold opacity-80">你的每日 TDEE 為</p>
+                <div class="text-5xl font-black my-2"><span id="tdeeVal" class="text-indigo-600">0</span> <small class="text-lg">kcal</small></div>
             </div>
         </div>
+    </main>
 
-        <div id="settingsTab" class="tab-content text-slate-800 dark:text-white">
-            <div class="card p-8 mb-8 border-t-8 border-gray-400">
-                <h2 class="text-2xl font-black mb-6" data-i18n="sys_settings">系統設定</h2>
-                
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-800/80 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
-                        <div>
-                            <p class="font-black text-sm" data-i18n="lang_setting">介面語言 / Language</p>
-                        </div>
-                        <select id="langSelect" onchange="setLang(this.value)" class="p-2 text-sm bg-white dark:bg-gray-700">
-                            <option value="zh">繁體中文</option>
-                            <option value="en">English</option>
-                        </select>
-                    </div>
-
-                    <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-800/80 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
-                        <div>
-                            <p class="font-black text-sm" data-i18n="health_sync">連接 Apple Health / Fit</p>
-                            <p class="text-[10px] text-slate-500 dark:text-gray-400 font-bold mt-1" data-i18n="health_sync_desc">自動同步步數與體重</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" class="sr-only toggle-checkbox" id="healthSyncToggle">
-                            <div class="toggle-switch"></div>
-                        </label>
-                    </div>
-                    
-                    <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-800/80 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
-                        <div>
-                            <p class="font-black text-sm" data-i18n="dark_mode">深色模式</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" class="sr-only toggle-checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
-                            <div class="toggle-switch"></div>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <nav class="fixed bottom-0 left-0 right-0 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl border-t border-gray-200/50 dark:border-gray-800/80 flex justify-around pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] px-2 z-[9999] rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.04)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
-        <button onclick="showTab('mealHub')" id="n-mealHub" class="flex flex-col items-center nav-active text-gray-400 transition-all duration-300 w-1/5 relative"><span class="text-2xl mb-1 drop-shadow-sm">🍱</span><span class="text-[10px] font-black tracking-widest" data-i18n="nav_diet">飲食</span></button>
-        <button onclick="showTab('gym')" id="n-gym" class="flex flex-col items-center text-gray-400 transition-all duration-300 w-1/5 relative"><span class="text-2xl mb-1 drop-shadow-sm">💪</span><span class="text-[10px] font-black tracking-widest" data-i18n="nav_gym">訓練</span></button>
-        <button onclick="showTab('community')" id="n-community" class="flex flex-col items-center text-gray-400 transition-all duration-300 w-1/5 relative"><span class="text-2xl mb-1 drop-shadow-sm">🌐</span><span class="text-[10px] font-black tracking-widest" data-i18n="nav_comm">社群</span></button>
-        <button onclick="showTab('user')" id="n-user" class="flex flex-col items-center text-gray-400 transition-all duration-300 w-1/5 relative"><span class="text-2xl mb-1 drop-shadow-sm">👤</span><span class="text-[10px] font-black tracking-widest" data-i18n="nav_user">用戶</span></button>
-        <button onclick="showTab('settings')" id="n-settings" class="flex flex-col items-center text-gray-400 transition-all duration-300 w-1/5 relative"><span class="text-2xl mb-1 drop-shadow-sm">⚙️</span><span class="text-[10px] font-black tracking-widest" data-i18n="nav_settings">設定</span></button>
-    </nav>
-
-    <script src="./database.js"></script>
-    <script src="./app.js"></script>
-    
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.log('OmniFit PWA Service Worker registered:', reg.scope);
-                }).catch(err => {
-                    console.log('PWA SW registration failed:', err);
-                });
-            });
-        }
-    </script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
