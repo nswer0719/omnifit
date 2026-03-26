@@ -6,37 +6,40 @@
 body {
     -webkit-tap-highlight-color: transparent;
     font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
 }
 
 .pt-safe-top { padding-top: calc(1rem + var(--sat)); }
 
 .glass-card {
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .dark .glass-card {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(15, 23, 42, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .glass-card-accent {
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.4);
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.4);
 }
 
 .dark .glass-card-accent {
-    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+    background: linear-gradient(135deg, #3730a3 0%, #5b21b6 100%);
     box-shadow: none;
 }
 
-.glass-card-accent p, .glass-card-accent div {
-    color: white !important;
+.input-field {
+    @apply w-full p-4 rounded-[1.25rem] bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-sm;
 }
 
-.input-field {
-    @apply w-full p-4 rounded-[1.2rem] bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-sm;
+/* 移除 Chrome/Safari 的數字輸入箭頭 */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
