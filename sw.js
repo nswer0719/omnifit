@@ -3,7 +3,7 @@ const ASSETS_TO_CACHE = [
     './index.html',
     './style.css',
     './database.js',
-    './storage.js',
+    './app.js',
     './manifest.json',
     'https://cdn.tailwindcss.com',
     'https://cdn.jsdelivr.net/npm/chart.js'
