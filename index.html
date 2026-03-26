@@ -9,99 +9,138 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
 
-    <main class="max-w-md mx-auto min-h-screen px-6 pt-safe-top pb-32">
-        <header class="py-8 flex justify-between items-center">
-            <h1 class="text-4xl font-black tracking-tighter text-indigo-600 dark:text-indigo-400">OmniFit</h1>
-            <button id="themeToggle" class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-xl">🌙</button>
-        </header>
+    <header class="fixed top-0 w-full max-w-md mx-auto z-40 px-6 pt-safe-top py-4 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-xl flex justify-between items-center">
+        <h1 class="text-3xl font-black tracking-tighter text-indigo-600 dark:text-indigo-400">OmniFit</h1>
+        <button id="themeToggle" class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-xl">🌙</button>
+    </header>
 
-        <div id="resultArea" class="hidden space-y-4 mb-8">
-            <div class="glass-card-accent p-8 rounded-[2.5rem] relative overflow-hidden">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-white/60">Target Weight</p>
-                        <div class="text-4xl font-black text-white"><span id="targetWVal">0</span><span class="text-lg ml-1 opacity-60">kg</span></div>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-white/60">Daily Intake</p>
-                        <div class="text-4xl font-black text-white"><span id="tdeeVal">0</span><span class="text-lg ml-1 opacity-60">kcal</span></div>
-                    </div>
+    <main class="max-w-md mx-auto min-h-screen px-6 pt-28 pb-32">
+        
+        <section id="tab-diet" class="tab-content active space-y-6 animate-fade-in">
+            <div class="flex gap-2 overflow-x-auto pb-2 hide-scrollbar" id="dateSelector">
                 </div>
-                <div class="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div id="kcalProgress" class="h-full bg-white transition-all duration-1000" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-3">
-                <div class="glass-card p-4 rounded-2xl text-center border-b-4 border-blue-500">
-                    <p class="text-[10px] font-bold opacity-50 mb-1">PRO (藍)</p>
-                    <p class="font-black text-blue-600 dark:text-blue-400"><span id="totalPro">0</span>g</p>
-                </div>
-                <div class="glass-card p-4 rounded-2xl text-center border-b-4 border-amber-500">
-                    <p class="text-[10px] font-bold opacity-50 mb-1">FAT (琥珀)</p>
-                    <p class="font-black text-amber-600 dark:text-amber-400"><span id="totalFat">0</span>g</p>
-                </div>
-                <div class="glass-card p-4 rounded-2xl text-center border-b-4 border-emerald-500">
-                    <p class="text-[10px] font-bold opacity-50 mb-1">CARB (翡翠)</p>
-                    <p class="font-black text-emerald-600 dark:text-emerald-400"><span id="totalCarb">0</span>g</p>
-                </div>
-            </div>
-        </div>
-
-        <section class="glass-card p-6 rounded-[2.5rem] mb-8">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold tracking-tight">🍱 Meals</h2>
-                <div class="text-right">
-                    <span id="mealTotalKcal" class="text-sm font-black bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-4 py-1.5 rounded-full">0 kcal</span>
-                </div>
-            </div>
             
-            <div class="relative mb-6">
-                <input type="text" id="foodSearch" placeholder="Search for food..." class="input-field rounded-2xl">
+            <div class="glass-card-accent p-6 rounded-[2rem] flex justify-between items-center text-white">
+                <div><p class="text-[10px] font-bold uppercase opacity-70">Daily Goal</p><p class="text-2xl font-black"><span id="dietGoalKcal">0</span> kcal</p></div>
+                <div class="text-right"><p class="text-[10px] font-bold uppercase opacity-70">Current</p><p class="text-2xl font-black"><span id="mealTotalKcal">0</span> kcal</p></div>
+            </div>
+
+            <div class="relative">
+                <input type="text" id="foodSearch" placeholder="Search food..." class="input-field rounded-2xl">
                 <div id="searchDropdown" class="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-2xl shadow-2xl z-50 hidden max-h-60 overflow-y-auto"></div>
             </div>
-
-            <div id="mealList" class="space-y-3">
-                </div>
+            <div id="mealList" class="space-y-3"></div>
         </section>
 
-        <details class="group">
-            <summary class="list-none text-center opacity-30 group-open:opacity-100 transition-opacity cursor-pointer">
-                <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-6"></div>
-            </summary>
-            <div class="glass-card p-6 rounded-[2.5rem] space-y-4 mb-10">
-                <h3 class="font-bold text-xs text-center uppercase tracking-widest opacity-50 mb-2">User Body Stats</h3>
+        <section id="tab-workout" class="tab-content hidden space-y-6 animate-fade-in">
+            <h2 class="text-2xl font-black tracking-tight">Today's Workout</h2>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button onclick="window.setWorkoutType('cardio')" class="p-4 rounded-[1.5rem] bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 font-bold active:scale-95 transition">有氧 (Cardio)</button>
+                <button onclick="window.setWorkoutType('strength')" class="p-4 rounded-[1.5rem] bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 font-bold active:scale-95 transition">無氧 (Strength)</button>
+            </div>
+
+            <div class="relative">
+                <input type="text" id="workoutSearch" placeholder="Search exercise..." class="input-field rounded-2xl">
+                <div id="workoutDropdown" class="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-2xl shadow-2xl z-50 hidden max-h-60 overflow-y-auto"></div>
+            </div>
+            <div id="workoutList" class="space-y-3"></div>
+        </section>
+
+        <section id="tab-social" class="tab-content hidden space-y-6 animate-fade-in">
+            <h2 class="text-2xl font-black tracking-tight">Community Feed</h2>
+            <div class="glass-card p-6 rounded-[2rem] text-center border-dashed border-2 border-indigo-200 dark:border-slate-700 cursor-pointer hover:bg-white/80 transition" onclick="document.getElementById('fileUpload').click()">
+                <div class="text-4xl mb-2">📸</div>
+                <p class="font-bold text-sm text-indigo-600 dark:text-indigo-400">發佈相片或影片</p>
+                <input type="file" id="fileUpload" accept="image/*,video/*" class="hidden">
+            </div>
+            <div id="socialFeed" class="space-y-6">
+                <div class="glass-card p-4 rounded-[2rem]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center text-xl">🐻</div>
+                        <div><p class="font-bold text-sm">Bubuz_Fan</p><p class="text-[10px] opacity-50">2 mins ago</p></div>
+                    </div>
+                    <div class="w-full h-48 bg-slate-200 dark:bg-slate-800 rounded-xl mb-3 flex items-center justify-center text-slate-400">Workout Check! 💪</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-user" class="tab-content hidden space-y-6 animate-fade-in">
+            <h2 class="text-2xl font-black tracking-tight">Dashboard</h2>
+            
+            <div class="glass-card-accent p-6 rounded-[2.5rem] text-white">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase opacity-70">Target Calorie</p>
+                        <p class="text-4xl font-black"><span id="userGoalCal">0</span></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold uppercase opacity-70">TDEE / BMI</p>
+                        <p class="text-xl font-bold"><span id="userTdee">0</span> / <span id="userBmi">0</span></p>
+                    </div>
+                </div>
+                <p id="calorieAdvice" class="text-xs font-semibold bg-white/20 p-3 rounded-xl backdrop-blur-md"></p>
+            </div>
+
+            <div class="glass-card p-6 rounded-[2rem]">
+                <h3 class="font-bold text-sm mb-4">Past 7 Days Weight Trend</h3>
+                <div class="flex items-end justify-between h-32 gap-2" id="weightChart">
+                    </div>
+            </div>
+        </section>
+
+        <section id="tab-settings" class="tab-content hidden space-y-6 animate-fade-in">
+            <h2 class="text-2xl font-black tracking-tight">Settings</h2>
+            <div class="glass-card p-6 rounded-[2.5rem] space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold opacity-40 ml-2">Weight (kg)</label>
-                        <input type="number" id="weight" class="input-field" placeholder="Current">
+                        <input type="number" id="setWeight" class="input-field" placeholder="Current">
                     </div>
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold opacity-40 ml-2 text-indigo-500">Goal Weight (kg)</label>
-                        <input type="number" id="targetW" class="input-field border-indigo-200 dark:border-indigo-900" placeholder="Target">
+                        <label class="text-[10px] font-bold opacity-40 ml-2 text-indigo-500">Goal (kg)</label>
+                        <input type="number" id="setTargetW" class="input-field border-indigo-200 dark:border-indigo-900" placeholder="Target">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="number" id="height" placeholder="Height (cm)" class="input-field">
-                    <input type="number" id="age" placeholder="Age" class="input-field">
+                    <div class="space-y-1"><label class="text-[10px] font-bold opacity-40 ml-2">Height (cm)</label><input type="number" id="setHeight" class="input-field"></div>
+                    <div class="space-y-1"><label class="text-[10px] font-bold opacity-40 ml-2">Age</label><input type="number" id="setAge" class="input-field"></div>
                 </div>
-                <select id="gender" class="input-field">
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                </select>
-                <select id="activity" class="input-field">
+                <select id="setGender" class="input-field"><option value="male">Male</option><option value="female">Female</option></select>
+                <select id="setActivity" class="input-field">
                     <option value="1.2">Sedentary (Office job)</option>
                     <option value="1.55">Moderate (Exercise 3-5 days)</option>
                     <option value="1.725">Active (Exercise 6-7 days)</option>
                 </select>
-                <button id="saveBtn" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 transition-all">SAVE & UPDATE</button>
+                <button id="saveBtn" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-200 dark:shadow-none active:scale-95 transition-all mt-4">SAVE DATA</button>
             </div>
-        </details>
+        </section>
+
     </main>
+
+    <nav class="fixed bottom-0 w-full max-w-md mx-auto z-50 pb-safe-bottom bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800">
+        <div class="flex justify-around items-center p-4">
+            <button onclick="window.switchTab('diet')" class="nav-btn active flex flex-col items-center gap-1 text-indigo-600" data-target="tab-diet">
+                <span class="text-xl">🥗</span><span class="text-[10px] font-bold">Diet</span>
+            </button>
+            <button onclick="window.switchTab('workout')" class="nav-btn flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition" data-target="tab-workout">
+                <span class="text-xl">💪</span><span class="text-[10px] font-bold">Workout</span>
+            </button>
+            <button onclick="window.switchTab('social')" class="nav-btn flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition" data-target="tab-social">
+                <span class="text-xl">🌐</span><span class="text-[10px] font-bold">Social</span>
+            </button>
+            <button onclick="window.switchTab('user')" class="nav-btn flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition" data-target="tab-user">
+                <span class="text-xl">👤</span><span class="text-[10px] font-bold">User</span>
+            </button>
+            <button onclick="window.switchTab('settings')" class="nav-btn flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition" data-target="tab-settings">
+                <span class="text-xl">⚙️</span><span class="text-[10px] font-bold">Settings</span>
+            </button>
+        </div>
+    </nav>
 
     <script type="module" src="js/main.js"></script>
 </body>
