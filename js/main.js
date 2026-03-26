@@ -3,69 +3,84 @@ import { Storage } from './storage.js';
 import { DietModule } from './modules/diet.js';
 
 const App = {
-    elements: {
-        inputs: ['age', 'gender', 'height', 'weight', 'activity'],
+    // 緩存常用的 DOM 元素
+    ui: {
+        age: document.getElementById('age'),
+        gender: document.getElementById('gender'),
+        height: document.getElementById('height'),
+        weight: document.getElementById('weight'),
+        activity: document.getElementById('activity'),
         saveBtn: document.getElementById('saveBtn'),
         tdeeVal: document.getElementById('tdeeVal'),
         bmrVal: document.getElementById('bmrVal'),
         resultArea: document.getElementById('resultArea'),
-        themeToggle: document.getElementById('themeToggle')
+        themeBtn: document.getElementById('themeToggle')
     },
 
     init() {
-        this.loadSavedData();
+        console.log("OmniFit 系統啟動...");
+        this.loadUserStats();
         this.bindEvents();
-        this.initTheme();
+        this.applyTheme();
     },
 
     bindEvents() {
-        this.elements.saveBtn.addEventListener('click', () => this.handleUpdate());
-        this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
+        // 計算按鈕
+        this.ui.saveBtn.addEventListener('click', () => this.updateStats());
+        
+        // 主題切換
+        this.ui.themeBtn.addEventListener('click', () => this.toggleTheme());
     },
 
-    handleUpdate() {
-        const stats = {};
-        let isValid = true;
+    updateStats() {
+        const stats = {
+            age: parseFloat(this.ui.age.value),
+            gender: this.ui.gender.value,
+            height: parseFloat(this.ui.height.value),
+            weight: parseFloat(this.ui.weight.value),
+            activity: parseFloat(this.ui.activity.value)
+        };
 
-        this.elements.inputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el.value) isValid = false;
-            stats[id] = (id === 'gender') ? el.value : parseFloat(el.value);
-        });
-
-        if (!isValid) {
-            alert("請填寫所有欄位");
+        // 驗證
+        if (Object.values(stats).some(val => !val && typeof val !== 'string')) {
+            alert("請完整填寫身體數據數據！");
             return;
         }
 
-        // 計算
+        // 邏輯處理
         const results = DietModule.calculate(stats);
-
-        // 儲存
+        
+        // 儲存數據
         Storage.save('user_stats', stats);
-
-        // UI 更新
-        this.displayResults(results);
+        
+        // 渲染 UI
+        this.renderResults(results);
+        
+        // 觸覺反饋
+        if (navigator.vibrate) navigator.vibrate(20);
     },
 
-    displayResults(results) {
-        this.elements.tdeeVal.innerText = results.tdee.toLocaleString();
-        this.elements.bmrVal.innerText = results.bmr.toLocaleString();
-        this.elements.resultArea.classList.remove('hidden');
+    renderResults(results) {
+        this.ui.tdeeVal.innerText = results.tdee.toLocaleString();
+        this.ui.bmrVal.innerText = results.bmr.toLocaleString();
+        this.ui.resultArea.classList.remove('hidden');
     },
 
-    loadSavedData() {
+    loadUserStats() {
         const saved = Storage.load('user_stats');
         if (saved) {
-            this.elements.inputs.forEach(id => {
-                document.getElementById(id).value = saved[id];
-            });
+            this.ui.age.value = saved.age;
+            this.ui.gender.value = saved.gender;
+            this.ui.height.value = saved.height;
+            this.ui.weight.value = saved.weight;
+            this.ui.activity.value = saved.activity;
+            
             const results = DietModule.calculate(saved);
-            this.displayResults(results);
+            this.renderResults(results);
         }
     },
 
-    initTheme() {
+    applyTheme() {
         const theme = Storage.load('theme') || 'light';
         if (theme === 'dark') document.documentElement.classList.add('dark');
     },
@@ -76,4 +91,5 @@ const App = {
     }
 };
 
+// 啟動 App
 document.addEventListener('DOMContentLoaded', () => App.init());
