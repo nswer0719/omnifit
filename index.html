@@ -12,15 +12,93 @@
     <meta name="theme-color" content="#020617" media="(prefers-color-scheme: dark)">
     
     <title>OmniFit - 國際正式發佈版</title>
-    <link rel="manifest" href="./manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <link rel="stylesheet" href="./style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap');
+        
+        :root { --sat: env(safe-area-inset-top); --sab: env(safe-area-inset-bottom); }
+        body { background-color: #f8fafc; color: #1e293b; padding-top: calc(4.5rem + var(--sat)); padding-bottom: calc(7rem + var(--sab)); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Plus Jakarta Sans', 'PingFang TC', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .dark body { background-color: #020617; color: #f1f5f9; }
+        
+        .card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 32px; border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.08); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .dark .card { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3); }
+        
+        input, select, textarea { background-color: #e2e8f0; color: #0f172a; border: 2px solid transparent; font-weight: 800; border-radius: 24px; transition: all 0.3s ease; outline: none; }
+        input::placeholder, textarea::placeholder { color: #64748b; opacity: 1; }
+        input:focus, select:focus, textarea:focus { border-color: #3b82f6; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+        .dark input, .dark select, .dark textarea { background-color: #334155; color: #f1f5f9; }
+        .dark input::placeholder, .dark textarea::placeholder { color: #94a3b8; }
+        .dark input:focus, .dark select:focus, .dark textarea:focus { border-color: #60a5fa; background-color: #1e293b; box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.15); }
+        
+        .nav-active { color: #3b82f6 !important; transform: scale(1.1); }
+        .nav-active::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background-color: #3b82f6; border-radius: 50%; }
+        
+        .tab-content { display: none; opacity: 0; transform: translateY(15px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); min-h: 85vh; padding-bottom: 2rem; }
+        .tab-content.active { display: block; opacity: 1; transform: translateY(0); }
+        
+        .sub-nav-container { background: rgba(226, 232, 240, 0.8); padding: 6px; border-radius: 28px; display: flex; gap: 4px; backdrop-filter: blur(10px); }
+        .dark .sub-nav-container { background: rgba(30, 41, 59, 0.8); }
+        .sub-tab { flex: 1; text-align: center; padding: 12px; border-radius: 24px; font-size: 13px; font-weight: 900; color: #475569; cursor: pointer; transition: all 0.3s; }
+        .sub-tab.active { background: white; color: #3b82f6; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .dark .sub-tab { color: #94a3b8; }
+        .dark .sub-tab.active { background: #0f172a; color: #60a5fa; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+
+        .suggestion-box { position: absolute; width: 100%; max-height: 300px; overflow-y: auto; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); border-radius: 28px; z-index: 5000; margin-top: 12px; border: 1px solid #cbd5e1; box-shadow: 0 24px 50px rgba(0,0,0,0.15); }
+        .dark .suggestion-box { background: rgba(30,41,59,0.98); border-color: #475569; box-shadow: 0 24px 50px rgba(0,0,0,0.4); }
+        
+        .date-chip { flex: 0 0 auto; padding: 14px 24px; border-radius: 24px; background: #e2e8f0; font-weight: 900; font-size: 13px; cursor: pointer; transition: 0.3s; color: #334155; }
+        .date-chip.active { color: white; background: linear-gradient(135deg, #f97316, #f59e0b); box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3); border: none; }
+        .dark .date-chip { background: #334155; color: #f1f5f9; }
+        
+        .meal-section-title { font-size: 13px; font-weight: 900; color: #64748b; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; margin-top: 32px; letter-spacing: 0.1em; }
+        .meal-section-title::after { content: ""; flex: 1; height: 2px; background: rgba(0,0,0,0.1); border-radius: 2px; }
+        .dark .meal-section-title { color: #94a3b8; }
+        .dark .meal-section-title::after { background: rgba(255,255,255,0.1); }
+        
+        .pr-badge { animation: pulsePR 2s infinite; background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; }
+        @keyframes pulsePR { 0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.6); } 70% { box-shadow: 0 0 0 15px rgba(251, 191, 36, 0); } 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); } }
+        
+        .timer-popup { animation: floatTimer 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes floatTimer { 0% { transform: translate(-50%, -20px); opacity: 0; } 100% { transform: translate(-50%, 0); opacity: 1; } }
+        
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .btn-press { transition: transform 0.1s ease; }
+        .btn-press:active { transform: scale(0.96); }
+
+        textarea.social-input { background: transparent; border: none; font-size: 1rem; line-height: 1.5; box-shadow: none; padding: 0; color: #1e293b; }
+        .dark textarea.social-input { color: #f1f5f9; }
+        textarea.social-input:focus { box-shadow: none; background: transparent; }
+        
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
+        .cal-day { padding: 10px 0; border-radius: 12px; font-weight: 800; font-size: 14px; color: #334155; cursor: pointer; transition: 0.2s; position: relative; background: #f1f5f9; }
+        .dark .cal-day { color: #cbd5e1; background: #1e293b; }
+        .cal-day:hover { background: #e2e8f0; }
+        .dark .cal-day:hover { background: #334155; }
+        .cal-day.active { background: #6366f1; color: white; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
+        .cal-day.empty { background: transparent; pointer-events: none; }
+        .cal-dot { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: #3b82f6; border-radius: 50%; }
+        .cal-day.active .cal-dot { background: white; }
+
+        .type-btn { flex: 1; text-align: center; padding: 10px; font-size: 12px; font-weight: 900; border-radius: 20px; transition: 0.3s; cursor: pointer; color: #475569; background: #e2e8f0; }
+        .dark .type-btn { color: #94a3b8; background: #334155; }
+        .type-btn.active { background: #6366f1; color: white; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
+        .type-btn.active-cardio { background: #10b981; color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+        
+        .toggle-switch { position: relative; width: 50px; height: 28px; background-color: #cbd5e1; border-radius: 9999px; transition: 0.3s; cursor: pointer; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; background-color: white; border-radius: 50%; transition: 0.3s; }
+        .dark .toggle-switch { background-color: #475569; }
+        .toggle-checkbox:checked + .toggle-switch { background-color: #10b981; }
+        .toggle-checkbox:checked + .toggle-switch::after { transform: translateX(22px); }
+        
+        .video-upload-label { border: 2px dashed rgba(236, 72, 153, 0.6); background: rgba(236, 72, 153, 0.08); }
+        .dark .video-upload-label { border-color: rgba(236, 72, 153, 0.4); background: rgba(236, 72, 153, 0.15); }
+    </style>
 </head>
 <body class="px-4 sm:px-6">
     
-    <div id="restTimerDisplay" class="hidden fixed top-[calc(5rem+var(--sat))] left-1/2 -translate-x-1/2 z-[6000] timer-popup bg-indigo-600/90 backdrop-blur-2xl text-white px-6 py-3 rounded-full font-black text-sm shadow-2xl shadow-indigo-500/40 border border-white/10 flex items-center gap-3">
+    <div id="restTimerDisplay" class="hidden fixed top-[calc(5rem+var(--sat))] left-1/2 -translate-x-1/2 z-[6000] timer-popup bg-indigo-600/95 backdrop-blur-xl text-white px-6 py-3 rounded-full font-black text-sm shadow-2xl shadow-indigo-500/40 border border-white/10 flex items-center gap-3">
         <span class="animate-pulse">⏳</span>
         <span id="restTimerText" data-i18n="rest_timer" class="tracking-tighter">休息: 00:00</span>
         <button onclick="stopRestTimer()" class="ml-2 w-7 h-7 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-xs btn-press transition-colors">✕</button>
@@ -65,7 +143,7 @@
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div class="card p-6 flex flex-col justify-between shadow-sm">
                         <div class="flex justify-between items-start mb-4">
-                            <h3 class="font-black text-blue-500 dark:text-blue-400 text-sm tracking-tight" data-i18n="water_title">飲水 💧</h3>
+                            <h3 class="font-black text-blue-600 dark:text-blue-400 text-sm tracking-tight" data-i18n="water_title">飲水 💧</h3>
                             <span id="waterCurrent" class="text-xl font-black text-blue-600 dark:text-blue-400 tracking-tighter">0ml</span>
                         </div>
                         <div class="grid grid-cols-2 gap-2 mt-auto">
@@ -113,13 +191,11 @@
                     </div>
                     <button onclick="addLog()" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-2xl font-black text-base shadow-lg shadow-blue-500/30 btn-press tracking-wide" data-i18n="btn_save_record">儲存紀錄</button>
                 </div>
-                
                 <div id="todayMealDisplay" class="space-y-4 mb-10 text-slate-800 dark:text-white"></div>
             </div>
 
             <div id="subContent-planner" class="meal-sub-content hidden">
                 <div class="flex space-x-2 overflow-x-auto no-scrollbar mb-6 pb-2 px-1" id="plannerDateBar"></div>
-                
                 <div class="card p-6 mb-6 bg-gradient-to-br from-amber-500 to-orange-600 text-white border-none shadow-xl shadow-amber-500/20 relative overflow-hidden">
                     <div class="flex items-center gap-6 relative z-10 w-full">
                         <div class="w-16 h-16 flex-shrink-0 bg-white/20 p-1.5 rounded-full backdrop-blur-md">
@@ -565,19 +641,501 @@
         <button onclick="showTab('settings')" id="n-settings" class="flex flex-col items-center text-slate-400 dark:text-slate-500 transition-all duration-300 w-1/5 relative"><span class="text-xl mb-0.5 drop-shadow-sm">⚙️</span><span class="text-[9px] font-bold tracking-widest uppercase" data-i18n="nav_settings">Set</span></button>
     </nav>
 
-    <script src="./database.js"></script>
-    <script src="./storage.js"></script>
-    
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.log('OmniFit PWA Service Worker registered:', reg.scope);
-                }).catch(err => {
-                    console.log('PWA SW registration failed:', err);
-                });
+        const NetAPI = {
+            save: (key, data) => localStorage.setItem(key, JSON.stringify(data)),
+            load: (key) => JSON.parse(localStorage.getItem(key))
+        };
+
+        const i18nDict = {
+            zh: {
+                nav_diet: "飲食", nav_gym: "訓練", nav_comm: "社群", nav_user: "用戶", nav_settings: "設定",
+                nav_today: "今日清單", nav_7day: "7日規劃", nav_recipe: "食譜庫", nav_today_train: "今日訓練", nav_7day_train: "7日課表", nav_history: "歷史紀錄",
+                water_title: "飲水 💧", add_diet: "🍽️ 新增飲食", meal_breakfast: "🌅 早餐時段", meal_lunch: "☀️ 午餐時段", meal_dinner: "🌙 晚餐時段", meal_snack: "🍏 點心與其他",
+                btn_save_record: "儲存紀錄", daily_plan_total: "當日規劃總額", edit_plan: "📅 編排", btn_add_list: "加入清單", qty: "份量 / Qty",
+                create_recipe: "🥑 建立食譜組合", selected_ingredients: "已選食材", btn_save_recipe: "封裝食譜",
+                vol_trend: "近 7 日容量趨勢", workout_log: "🏋️‍♂️ 訓練日誌", strength: "重量訓練", cardio: "有氧運動", weight_kg: "重量(KG)", sets: "組數", reps: "次數", time_mins: "時間(Mins)", distance_km: "距離(KM)", today_list: "今日清單",
+                history_query: "📜 歷史紀錄查詢", comm_feed: "動態牆", search_comm: "🔍 搜尋用戶或內容...", my_post: "發佈動態", comm_profile: "個人主頁", comm_desc: "分享您的努力，激勵更多人！", post_type: "貼文類型", upload_media: "點擊上傳相片或短片", btn_publish: "發佈至動態牆", post_placeholder: "今天練得如何？寫下一些心得紀錄吧...", 
+                type_diet: "🍱 美味飲食分享", type_training: "💪 訓練動作紀錄", type_physique: "👤 體態轉變", comment_placeholder: "留言...", btn_comment: "發佈", stats_posts: "貼文", stats_followers: "粉絲", stats_following: "追蹤中", my_works: "我的作品與分享",
+                user_core: "個人數據核心", curr_weight: "目前體重 (KG)", target_weight: "目標體重 (KG)", gender: "性別", age: "年齡", height: "身高 (CM)", pal: "活動量", btn_sync_data: "同步運算核心數據", ai_target: "AI 建議攝取目標", weight_chart: "體重軌跡", calorie_trend: "熱量攝取趨勢", label_tdee: "維持 TDEE", label_bmi: "身體質量 BMI", label_target_dist: "距目標",
+                pal_1_2: "💻 久坐 (辦公族、幾乎不運動)", pal_1_375: "🚶 輕度 (每週輕鬆活動 1-3 天)", pal_1_465: "🏃 中輕度 (每週規律健身 3-4 天)", pal_1_55: "🏃 中度 (每週規律訓練 5-6 天)", pal_1_725: "🏋️ 高度 (每日重訓或勞動力)", pal_1_9: "🔥 極高 (專業運動員、長期競技)", male: "男", female: "女", range_7: "7天", range_30: "30天", range_all: "全部",
+                sys_settings: "系統設定", lang_setting: "介面語言 / Language", health_sync: "連接 Apple Health / Fit", health_sync_desc: "自動同步步數與體重", dark_mode: "深色模式", calculating: "計算中...", rest_timer: "休息: 00:00", select_date_cal: "請選擇日曆上的日期",
+                legal_support: "法律與支援", privacy_policy: "隱私政策", tos: "服務條款", health_disclaimer: "健康免責聲明", content_mod: "社群內容審核聲明", permissions: "權限導覽", contact_support: "聯繫支援 / 意見回饋", version: "版本 1.0.0 (Build 26)", report_post: "檢舉貼文", block_user: "封鎖用戶"
+            },
+            en: {
+                nav_diet: "Diet", nav_gym: "Gym", nav_comm: "Social", nav_user: "User", nav_settings: "Set",
+                nav_today: "Today", nav_7day: "Planner", nav_recipe: "Recipes", nav_today_train: "Workout", nav_7day_train: "Planner", nav_history: "History",
+                water_title: "Water 💧", add_diet: "🍽️ Add Meal", meal_breakfast: "🌅 Breakfast", meal_lunch: "☀️ Lunch", meal_dinner: "🌙 Dinner", meal_snack: "🍏 Snack",
+                btn_save_record: "Save Record", daily_plan_total: "Daily Plan Total", edit_plan: "📅 Plan", btn_add_list: "Add to List", qty: "Qty",
+                create_recipe: "🥑 Create Recipe", selected_ingredients: "Selected", btn_save_recipe: "Save Recipe",
+                vol_trend: "7-Day Volume Trend", workout_log: "🏋️‍♂️ Workout Log", strength: "Strength", cardio: "Cardio", weight_kg: "Weight(KG)", sets: "Sets", reps: "Reps", time_mins: "Time(Mins)", distance_km: "Distance(KM)", today_list: "Today's List",
+                history_query: "📜 History", comm_feed: "Feed", search_comm: "🔍 Search users or posts...", my_post: "Create Post", comm_profile: "Profile", comm_desc: "Share your progress!", post_type: "Post Type", upload_media: "Upload Photo/Video", btn_publish: "Publish to Feed", post_placeholder: "How was your workout today? Write a log...",
+                type_diet: "🍱 Diet Share", type_training: "💪 Training Log", type_physique: "👤 Physique Update", comment_placeholder: "Add a comment...", btn_comment: "Post", stats_posts: "Posts", stats_followers: "Followers", stats_following: "Following", my_works: "My Posts & Media",
+                user_core: "Core Data", curr_weight: "Current Wt (KG)", target_weight: "Target Wt (KG)", gender: "Gender", age: "Age", height: "Height (CM)", pal: "Activity Level", btn_sync_data: "Sync Core Data", ai_target: "AI Calorie Goal", weight_chart: "Weight Tracker", calorie_trend: "Calorie Trend", label_tdee: "Maint. TDEE", label_bmi: "Body Mass BMI", label_target_dist: "To Target",
+                pal_1_2: "💻 Sedentary (Office job)", pal_1_375: "🚶 Light (Exercise 1-3 days/wk)", pal_1_465: "🏃 Mod-Light (3-4 days/wk)", pal_1_55: "🏃 Moderate (5-6 days/wk)", pal_1_725: "🏋️ Heavy (Daily hard training/labor)", pal_1_9: "🔥 Extreme (Pro athlete)", male: "Male", female: "Female", range_7: "7 Days", range_30: "30 Days", range_all: "All",
+                sys_settings: "System Settings", lang_setting: "Language", health_sync: "Connect Health/Fit", health_sync_desc: "Auto-sync steps & weight", dark_mode: "Dark Mode", calculating: "Calc...", rest_timer: "Rest: 00:00", select_date_cal: "Please select a date",
+                legal_support: "Legal & Support", privacy_policy: "Privacy Policy", tos: "Terms of Service", health_disclaimer: "Health Disclaimer", content_mod: "Content Moderation", permissions: "Permissions", contact_support: "Contact Support / Feedback", version: "Version 1.0.0 (Build 26)", report_post: "Report Post", block_user: "Block User"
+            }
+        };
+
+        const dayLabels = {
+            zh: { '週一':'週一', '週二':'週二', '週三':'週三', '週四':'週四', '週五':'週五', '週六':'週六', '週日':'週日' },
+            en: { '週一':'Mon', '週二':'Tue', '週三':'Wed', '週四':'Thu', '週五':'Fri', '週六':'Sat', '週日':'Sun' }
+        };
+
+        const baseDB = [
+            {name:"白飯 (White Rice/碗/200g)",p:5,c:56,f:0.6}, {name:"糙米飯 (Brown Rice/碗/200g)",p:5,c:52,f:1.6}, {name:"地瓜 (Sweet Potato/150g)",p:2,c:36,f:0.3}, {name:"馬鈴薯 (Potato/150g)",p:3,c:26,f:0.2}, {name:"全麥吐司 (Whole Wheat Toast/片)",p:4,c:15,f:1}, {name:"白吐司 (White Toast/片)",p:3,c:14,f:1}, {name:"燕麥片 (Oats/50g)",p:6,c:33,f:3.5}, {name:"義大利麵 (Pasta/100g乾)",p:12,c:75,f:1.5}, {name:"玉米 (Corn/根)",p:4,c:25,f:1.5}, {name:"烏龍麵 (Udon/200g)",p:5,c:45,f:1},
+            {name:"雞胸肉 (Chicken Breast/100g)",p:31,c:0,f:3.6}, {name:"雞腿肉 (Chicken Thigh/100g/去皮)",p:24,c:0,f:8}, {name:"雞蛋 (Egg/顆)",p:7,c:0.6,f:5}, {name:"豬里肌 (Pork Loin/100g)",p:22,c:0,f:4}, {name:"豬梅花 (Pork Shoulder/100g)",p:18,c:0,f:17}, {name:"牛腱 (Beef Shank/100g)",p:26,c:0,f:4}, {name:"牛小排 (Short Rib/100g)",p:15,c:0,f:28}, {name:"培根 (Bacon/片)",p:3,c:0.5,f:10}, {name:"鴨肉 (Duck/100g)",p:18,c:0,f:15}, {name:"羊肉 (Lamb/100g)",p:20,c:0,f:12},
+            {name:"鯛魚片 (Tilapia/100g)",p:18,c:0,f:1.5}, {name:"鮭魚 (Salmon/100g)",p:20,c:0,f:14}, {name:"鱈魚 (Cod/100g)",p:16,c:0,f:1}, {name:"蝦子 (Shrimp/100g)",p:21,c:1,f:1}, {name:"蛤蜊 (Clam/100g肉)",p:13,c:3,f:0.6}, {name:"小卷 (Squid/100g)",p:16,c:1,f:1}, {name:"鮪魚罐頭 (Canned Tuna/水煮/100g)",p:24,c:0,f:0.8}, {name:"蟹肉棒 (Crab Stick/5條)",p:6,c:10,f:0.5}, {name:"生蠔 (Oyster/100g)",p:9,c:5,f:2}, {name:"鯖魚 (Mackerel/100g)",p:19,c:0,f:18},
+            {name:"嫩豆腐 (Silken Tofu/半盒/150g)",p:7,c:3,f:4}, {name:"板豆腐 (Firm Tofu/100g)",p:9,c:2,f:5}, {name:"無糖豆漿 (Unsweetened Soy Milk/400ml)",p:13,c:4,f:8}, {name:"低脂牛奶 (Low-fat Milk/240ml)",p:8,c:12,f:3}, {name:"全脂牛奶 (Whole Milk/240ml)",p:8,c:12,f:8}, {name:"希臘優格 (Greek Yogurt/100g)",p:10,c:4,f:0.5}, {name:"起司片 (Cheese Slice/片)",p:5,c:1,f:6}, {name:"起司條 (String Cheese/條)",p:7,c:1,f:5}, {name:"豆干(Dried Tofu/2塊)",p:10,c:2,f:6}, {name:"納豆(Natto/盒)",p:7,c:5,f:4}, {name:"毛豆(Edamame/100g)",p:12,c:10,f:5},
+            {name:"青江菜(Bok Choy/100g)",p:1.5,c:2,f:0.2}, {name:"高麗菜(Cabbage/100g)",p:1.3,c:5,f:0.2}, {name:"花椰菜(Cauliflower/100g)",p:3,c:5,f:0.4}, {name:"菠菜(Spinach/100g)",p:2.5,c:3,f:0.4}, {name:"空心菜(Water Spinach/100g)",p:2,c:3,f:0.3}, {name:"大白菜(Napa Cabbage/100g)",p:1,c:3,f:0.1}, {name:"洋蔥(Onion/100g)",p:1,c:9,f:0.1}, {name:"胡蘿蔔(Carrot/100g)",p:1,c:9,f:0.2}, {name:"小黃瓜(Cucumber/100g)",p:1,c:3,f:0.1}, {name:"番茄(Tomato/中顆)",p:1,c:4,f:0.2},
+            {name:"香菇(Shiitake Mushroom/100g)",p:3,c:4,f:0.3}, {name:"金針菇(Enoki Mushroom/100g)",p:2.5,c:6,f:0.4}, {name:"杏鮑菇(King Oyster Mushroom/100g)",p:2.5,c:5,f:0.3}, {name:"苦瓜(Bitter Melon/100g)",p:1,c:4,f:0.1}, {name:"茄子(Eggplant/100g)",p:1,c:6,f:0.2}, {name:"青椒(Green Pepper/100g)",p:1,c:5,f:0.2}, {name:"竹筍(Bamboo Shoot/100g)",p:2,c:4,f:0.2}, {name:"蘆筍(Asparagus/100g)",p:2.2,c:4,f:0.2}, {name:"南瓜(Pumpkin/100g)",p:1.7,c:15,f:0.2}, {name:"冬瓜(Winter Melon/100g)",p:0.5,c:2,f:0.1},
+            {name:"香蕉(Banana/根)",p:1.1,c:27,f:0.3}, {name:"蘋果(Apple/中顆)",p:0.5,c:25,f:0.4}, {name:"奇異果(Kiwi/顆)",p:1,c:15,f:0.5}, {name:"芭樂(Guava/中顆)",p:2,c:24,f:0.7}, {name:"葡萄(Grape/10顆)",p:0.5,c:15,f:0.2}, {name:"柳丁(Orange/顆)",p:1,c:12,f:0.2}, {name:"木瓜(Papaya/1/4個)",p:1,c:15,f:0.2}, {name:"西瓜(Watermelon/片)",p:1,c:12,f:0.2}, {name:"鳳梨(Pineapple/100g)",p:0.5,c:13,f:0.1}, {name:"草莓(Strawberry/10顆)",p:0.7,c:8,f:0.3},
+            {name:"火龍果(Dragon Fruit/100g)",p:1,c:12,f:0.5}, {name:"酪梨(Avocado/100g)",p:2,c:8,f:15}, {name:"藍莓(Blueberry/100g)",p:0.7,c:14,f:0.3}, {name:"芒果(Mango/100g)",p:0.6,c:15,f:0.4}, {name:"櫻桃(Cherry/10顆)",p:1,c:12,f:0.3},
+            {name:"綜合堅果(Mixed Nuts/20g)",p:4,c:4,f:11}, {name:"花生(Peanut/20g)",p:5,c:3,f:10}, {name:"腰果(Cashew/20g)",p:4,c:6,f:9}, {name:"黑巧克力(Dark Choc 85%/20g)",p:2,c:4,f:10}, {name:"蘇打餅乾(Soda Cracker/3片)",p:2,c:15,f:3}, {name:"紅豆湯(Red Bean Soup/碗)",p:6,c:40,f:1}, {name:"茶葉蛋(Tea Egg/顆)",p:7,c:1,f:5}, {name:"地瓜球(Sweet Potato Ball/10顆)",p:1,c:45,f:15}, {name:"雞蛋糕(Egg Cake/5個)",p:4,c:30,f:6}, {name:"爆米花(Popcorn/小份)",p:3,c:30,f:12},
+            {name:"黑咖啡(Black Coffee/大杯)",p:0.5,c:1,f:0}, {name:"無糖綠茶(Green Tea/500ml)",p:0,c:0,f:0}, {name:"拿鐵(Latte/無糖/大杯)",p:10,c:15,f:10}, {name:"珍珠奶茶(Boba Tea/微糖/700ml)",p:5,c:80,f:25}, {name:"可樂(Cola/罐)",p:0,c:35,f:0}, {name:"柳橙汁(Orange Juice/200ml)",p:1,c:22,f:0.2}, {name:"乳清蛋白粉(Whey Protein/份)",p:20,c:3,f:1.5}, {name:"啤酒(Beer/罐)",p:1,c:13,f:0}, {name:"紅酒(Red Wine/杯)",p:0,c:4,f:0}, {name:"運動飲料(Sports Drink/罐)",p:0,c:25,f:0},
+            {name:"麥香雞(McChicken/個)",p:15,c:40,f:18}, {name:"大麥克(Big Mac/個)",p:25,c:45,f:30}, {name:"麥脆雞(Fried Chicken/塊)",p:18,c:15,f:25}, {name:"薯條(French Fries/中)",p:3,c:40,f:15}, {name:"牛肉麵(Beef Noodle Soup/碗)",p:30,c:65,f:20}, {name:"魯肉飯(Braised Pork Rice/碗)",p:10,c:50,f:25}, {name:"水餃(Dumplings/10顆)",p:15,c:55,f:20}, {name:"鍋貼(Pan-fried Dumplings/10顆)",p:18,c:60,f:35}, {name:"便利商店便當(Bento Box/個)",p:25,c:90,f:20}, {name:"三明治(Sandwich/個)",p:12,c:30,f:10},
+            {name:"珍珠奶茶(Boba Tea/全糖/700ml)",p:5,c:105,f:25}, {name:"無糖烏龍茶(Oolong Tea/500ml)",p:0,c:0,f:0}, {name:"燕麥奶(Oat Milk/250ml)",p:3,c:16,f:5}, {name:"杏仁奶(Almond Milk/250ml)",p:1,c:1,f:2.5}, {name:"豆漿(Soy Milk/有糖/400ml)",p:13,c:20,f:8}, {name:"美式咖啡(Americano/熱)",p:0,c:1,f:0}, {name:"蘋果汁(Apple Juice/200ml)",p:0.2,c:23,f:0.1}, {name:"葡萄汁(Grape Juice/200ml)",p:0.5,c:30,f:0.1}, {name:"冬瓜茶(Winter Melon Tea/500ml)",p:0,c:35,f:0}, {name:"多多綠茶(Yakult Green Tea/500ml)",p:2,c:40,f:0},
+            {name:"蛋塔(Egg Tart/個)",p:3,c:20,f:15}, {name:"車輪餅(Wheel Pie/奶油)",p:4,c:30,f:10}, {name:"車輪餅(Wheel Pie/紅豆)",p:5,c:35,f:8}, {name:"蔥抓餅(Scallion Pancake/加蛋)",p:12,c:45,f:25}, {name:"雞排(Fried Chicken Fillet/大片)",p:35,c:40,f:32}, {name:"甜不辣(Tempura/炸/份)",p:6,c:35,f:18}, {name:"豬血糕(Pig Blood Cake/支)",p:4,c:30,f:1}, {name:"滷豆干(Braised Tofu/份)",p:14,c:5,f:8}, {name:"滷海帶(Braised Kelp/份)",p:1,c:3,f:0}, {name:"滷百頁豆腐(Braised Tofu/份)",p:18,c:5,f:20},
+            {name:"披薩(Pizza/夏威夷/片)",p:12,c:30,f:15}, {name:"炸雞腿(Fried Chicken Leg/支)",p:20,c:12,f:18}, {name:"炸薯餅(Hash Brown/塊)",p:1,c:15,f:10}, {name:"起司漢堡(Cheeseburger/個)",p:15,c:30,f:15}, {name:"潛艇堡(Sub/牛肉6吋)",p:25,c:45,f:10}, {name:"潛艇堡(Sub/香烤雞胸6吋)",p:22,c:45,f:5}, {name:"大腸麵線(Oyster Vermicelli/碗)",p:10,c:45,f:15}, {name:"臭豆腐(Stinky Tofu/碗)",p:12,c:20,f:18}, {name:"蚵仔煎(Oyster Omelet/份)",p:14,c:40,f:22}, {name:"肉圓(Ba-wan/顆)",p:6,c:40,f:10},
+            {name:"排骨飯(Pork Chop Bento/便當)",p:32,c:95,f:35}, {name:"雞腿便當(Chicken Leg Bento/炸)",p:35,c:90,f:40}, {name:"控肉飯(Braised Pork Bento/便當)",p:25,c:90,f:45}, {name:"肉絲炒飯(Pork Fried Rice/份)",p:18,c:85,f:25}, {name:"炒麵(Fried Noodles/份)",p:15,c:80,f:22}, {name:"義大利麵(Pasta/白醬培根)",p:20,c:85,f:40}, {name:"義大利麵(Pasta/紅醬肉醬)",p:22,c:85,f:25}, {name:"義大利麵(Pasta/青醬雞肉)",p:28,c:80,f:35}, {name:"鐵板麵(Teppanyaki Noodles/份)",p:10,c:60,f:15}, {name:"廣東粥(Cantonese Congee/碗)",p:8,c:55,f:5},
+            {name:"雪花牛(Beef Slices/火鍋肉/100g)",p:14,c:0,f:40}, {name:"梅花豬(Pork Slices/火鍋肉/100g)",p:18,c:0,f:15}, {name:"松阪豬(Matsusaka Pork/100g)",p:18,c:0,f:12}, {name:"雞柳條(Chicken Tenders/100g)",p:22,c:0,f:1.5}, {name:"鯛魚下巴(Tilapia Jaw/100g)",p:15,c:0,f:18}, {name:"鮭魚肚(Salmon Belly/100g)",p:16,c:0,f:25}, {name:"魷魚圈(Calamari/100g)",p:15,c:2,f:1}, {name:"蛤蠣(Clams/100g去殼)",p:10,c:2,f:1}, {name:"牡蠣(Oysters/100g)",p:9,c:5,f:2}, {name:"蝦仁(Shrimp/100g)",p:20,c:0,f:1},
+            {name:"高麗菜(Fried Cabbage/炒/100g)",p:1.5,c:5,f:5}, {name:"菠菜(Fried Spinach/炒/100g)",p:2.5,c:4,f:5}, {name:"地瓜葉(Boiled Yam Leaves/燙/100g)",p:3,c:4,f:1}, {name:"芥藍菜(Chinese Broccoli/100g)",p:2,c:4,f:0}, {name:"龍鬚菜(Chayote Shoots/100g)",p:3,c:5,f:0}, {name:"空心菜(Fried Water Spinach/炒/100g)",p:2,c:3,f:5}, {name:"大陸妹(Boiled Lettuce/燙/100g)",p:1.5,c:3,f:1}, {name:"白花椰菜(White Cauliflower/100g)",p:2,c:5,f:0}, {name:"青花菜(Broccoli/水煮/100g)",p:3,c:6,f:0}, {name:"綜合菇(Mixed Mushrooms/炒/100g)",p:3,c:5,f:4},
+            {name:"鮭魚握壽司(Salmon Sushi/2貫)",p:8,c:15,f:5}, {name:"鮪魚握壽司(Tuna Sushi/2貫)",p:10,c:15,f:1}, {name:"玉子燒壽司(Tamagoyaki Sushi/2貫)",p:5,c:16,f:3}, {name:"稻荷壽司(Inari Sushi/豆皮/2貫)",p:4,c:20,f:6}, {name:"花壽司(Maki Sushi/4片)",p:6,c:30,f:4}, {name:"炸豬排丼(Katsudon/份)",p:35,c:100,f:30}, {name:"牛丼(Gyudon/份)",p:25,c:95,f:25}, {name:"親子丼(Oyakodon/份)",p:30,c:90,f:15}, {name:"炸蝦天婦羅(Shrimp Tempura/2尾)",p:10,c:20,f:12}, {name:"烏龍湯麵(Udon Noodle Soup/碗)",p:12,c:70,f:5},
+            {name:"水煮鮪魚罐頭(Tuna in Water/半罐)",p:12,c:0,f:0.5}, {name:"油漬鮪魚罐頭(Tuna in Oil/半罐)",p:12,c:0,f:8}, {name:"鯖魚罐頭(Mackerel Canned/半罐)",p:14,c:2,f:12}, {name:"蒲燒鰻罐頭(Eel Canned/半罐)",p:10,c:8,f:10}, {name:"玉米粒罐頭(Corn Canned/100g)",p:3,c:20,f:1}, {name:"黑豆(Black Beans/熟/50g)",p:8,c:15,f:4}, {name:"鷹嘴豆(Chickpeas/熟/50g)",p:4,c:14,f:1}, {name:"綠豆湯(Mung Bean Soup/碗)",p:6,c:35,f:0}, {name:"紅豆冰棒(Red Bean Popsicle/支)",p:2,c:25,f:2}, {name:"薏仁湯(Job's Tears Soup/碗)",p:4,c:30,f:1},
+            {name:"芋圓(Taro Balls/10顆)",p:1,c:35,f:8}, {name:"燒仙草(Hot Grass Jelly/碗)",p:2,c:25,f:0}, {name:"豆花(Tofu Pudding/碗/無糖水)",p:8,c:5,f:4}, {name:"布丁(Pudding/盒)",p:4,c:20,f:5}, {name:"優酪乳(Yogurt Drink/原味/200ml)",p:6,c:24,f:2}, {name:"水餃(Dumplings/鮮肉/10顆)",p:15,c:50,f:22}, {name:"水煎包(Pan-fried Bun/份)",p:8,c:45,f:20}, {name:"小籠包(Soup Dumpling/顆)",p:4,c:15,f:6}, {name:"蘿蔔糕(Turnip Cake/片)",p:2,c:20,f:5}, {name:"蛋餅(Egg Pancake/原味)",p:8,c:30,f:12},
+            {name:"黑糖珍珠(Brown Sugar Boba/50g)",p:0,c:40,f:0}, {name:"仙草凍(Grass Jelly/100g)",p:0,c:5,f:0}, {name:"愛玉(Aiyu Jelly/100g)",p:0,c:1,f:0}, {name:"蒟蒻(Konjac/100g)",p:0,c:4,f:0}, {name:"椰果(Coconut Jelly/50g)",p:0,c:10,f:0}, {name:"粉條(Tapioca Noodles/50g)",p:0,c:15,f:0}, {name:"湯圓(Tangyuan/50g)",p:1,c:35,f:1}, {name:"地瓜圓(Sweet Potato Balls/50g)",p:1,c:30,f:1}, {name:"麻糬(Mochi/花生/顆)",p:3,c:25,f:8}, {name:"麻糬(Mochi/芝麻/顆)",p:3,c:25,f:9},
+            {name:"肋眼牛排 (Ribeye Steak/100g)",p:24,c:0,f:14}, {name:"火雞胸肉 (Turkey Breast/100g)",p:29,c:0,f:1}, {name:"貝果 (Bagel/個)",p:10,c:48,f:1.5}, {name:"酸種麵包 (Sourdough Bread/片)",p:4,c:18,f:1}, {name:"美式鬆餅 (Pancakes/2片)",p:6,c:30,f:8}, {name:"格子鬆餅 (Waffles/片)",p:4,c:25,f:10}, {name:"燕麥粥 (Oatmeal/碗)",p:6,c:27,f:3}, {name:"起司通心粉 (Mac & Cheese/碗)",p:12,c:45,f:10}, {name:"茅屋起司 (Cottage Cheese/100g)",p:11,c:3,f:4}, {name:"莫札瑞拉起司 (Mozzarella/30g)",p:6,c:1,f:6},
+            {name:"切達起司 (Cheddar/30g)",p:7,c:0.5,f:9}, {name:"鷹嘴豆泥 (Hummus/2匙)",p:2,c:4,f:5}, {name:"花生醬 (Peanut Butter/2匙)",p:7,c:6,f:16}, {name:"杏仁醬 (Almond Butter/2匙)",p:7,c:6,f:18}, {name:"薩拉米香腸 (Salami/30g)",p:6,c:1,f:11}, {name:"酪梨吐司 (Avocado Toast/片)",p:6,c:20,f:12}, {name:"凱薩沙拉 (Caesar Salad/碗)",p:5,c:10,f:15}, {name:"馬鈴薯泥 (Mashed Potatoes/碗)",p:4,c:35,f:8}, {name:"英式烤豆 (Baked Beans/碗)",p:12,c:40,f:1}, {name:"藜麥 (Quinoa/煮熟1碗)",p:8,c:39,f:3.5}, 
+            {name:"櫛瓜 (Zucchini/100g)",p:1,c:3,f:0}, {name:"抱子甘藍 (Brussels Sprouts/100g)",p:3,c:9,f:0}, {name:"藍莓 (Blueberries/碗)",p:1,c:21,f:0.5}, {name:"覆盆子 (Raspberries/碗)",p:1.5,c:15,f:0.8}, {name:"燕麥穀物 (Granola/半碗)",p:5,c:30,f:10}, {name:"可頌 (Croissant/個)",p:5,c:26,f:12}, {name:"瑪芬蛋糕 (Muffin/個)",p:6,c:50,f:15}, {name:"甜甜圈 (Donut/個)",p:4,c:30,f:15}, {name:"熱狗 (Hot Dog/份)",p:10,c:20,f:15}, {name:"義大利臘腸披薩 (Pepperoni Pizza/片)",p:12,c:35,f:15}, 
+            {name:"麥克雞塊 (Chicken Nuggets/6塊)",p:15,c:15,f:18}, {name:"美式炒蛋 (Scrambled Eggs/2顆)",p:12,c:2,f:14}, {name:"歐姆蛋 (Omelet/起司口味)",p:16,c:3,f:20}, {name:"雞肉捲餅 (Chicken Wrap/份)",p:25,c:40,f:12}, {name:"墨西哥捲餅 (Burrito/份)",p:20,c:50,f:18}, {name:"塔可餅 (Taco/雞肉)",p:15,c:20,f:10}, {name:"炸魚薯條 (Fish and Chips/份)",p:25,c:60,f:30}, {name:"豬排 (Pork Chop/100g)",p:25,c:0,f:12}, {name:"烤牛肉 (Roast Beef/100g)",p:26,c:0,f:10}, {name:"義式肉丸 (Meatballs/5顆)",p:15,c:10,f:18}, 
+            {name:"番茄肉醬義大利麵 (Spaghetti Bolognese)",p:20,c:65,f:15}, {name:"千層麵 (Lasagna/份)",p:22,c:50,f:20}, {name:"蛤蜊巧達湯 (Clam Chowder/碗)",p:8,c:20,f:12}, {name:"番茄濃湯 (Tomato Soup/碗)",p:2,c:15,f:4}
+        ];
+
+        const gymDB = ["槓鈴臥推 (Barbell Bench Press)", "啞鈴臥推 (Dumbbell Bench Press)", "上胸臥推 (Incline Bench Press)", "下胸臥推 (Decline Bench Press)", "機械飛鳥 (Machine Fly)", "滑輪下拉 (Lat Pulldown)", "引體向上 (Pull-up)", "槓鈴划船 (Barbell Row)", "啞鈴划船 (Dumbbell Row)", "坐姿划船 (Seated Row)", "槓鈴深蹲 (Barbell Squat)", "頸前深蹲 (Front Squat)", "硬舉 (Deadlift)", "腿推舉 (Leg Press)", "羅馬尼亞硬舉 (Romanian Deadlift)", "保加利亞分腿蹲 (Bulgarian Split Squat)", "腿彎舉 (Leg Curl)", "腿伸直 (Leg Extension)", "槓鈴肩推 (Barbell Shoulder Press)", "啞鈴肩推 (Dumbbell Shoulder Press)", "側平舉 (Lateral Raise)", "前平舉 (Front Raise)", "滑輪側平舉 (Cable Lateral Raise)", "反向飛鳥 (Reverse Fly)", "二頭彎舉 (Bicep Curl)", "錘式彎舉 (Hammer Curl)", "三頭下壓 (Tricep Pushdown)", "法式彎舉 (Skull Crusher)", "仰臥起坐 (Sit-up)", "棒式 (Plank)", "捲腹 (Crunch)", "俄羅斯轉體 (Russian Twist)", "波比跳 (Burpee)", "羅馬椅挺身 (Hyperextension)", 
+        "滑輪夾胸 (Cable Crossover)", "滑輪面拉 (Face Pull)", "滑輪單臂划船 (Single-arm Cable Row)", "滑輪飛鳥 (Cable Fly)", "滑輪過頭三頭伸展 (Overhead Tricep Extension)", "滑輪直臂下拉 (Straight-arm Pulldown)", 
+        "壺鈴擺盪 (Kettlebell Swing)", "壺鈴深蹲 (Kettlebell Squat)", "壺鈴土耳其起立 (Turkish Get-up)", "壺鈴肩推 (Kettlebell Press)", "壺鈴高腳杯深蹲 (Goblet Squat)", "壺鈴農夫走路 (Farmer's Walk)", "壺鈴單臂划船 (Single-arm KB Row)", "壺鈴硬舉 (Kettlebell Deadlift)"];
+        const cardioDB = ["跑步 (Running)", "自行車 (Cycling)", "游泳 (Swimming)", "橢圓機 (Elliptical)", "划船機 (Rowing Machine)", "階梯機 (Stair Climber)", "跳繩 (Jump Rope)", "有氧操 (Aerobics)", "HIIT (High-Intensity Interval Training)"];
+
+        const KEYS = { logs: 'logs_vDual', recipes: 'recipes_vDual', plans: 'plans_vDual', user: 'user_vDual', gym: 'gym_vDual', theme: 'theme_vDual', gymPlans: 'gymPlans_vDual', posts: 'posts_vDual', profile: 'profile_vDual' };
+        
+        let logs = NetAPI.load(KEYS.logs) || {};
+        let recipes = NetAPI.load(KEYS.recipes) || [];
+        let planner = NetAPI.load(KEYS.plans) || {};
+        let user = NetAPI.load(KEYS.user) || { gender:'male', h:175, w:75, targetW:70, a:25, act:1.2, weights:[], water:{} };
+        let gym = NetAPI.load(KEYS.gym) || {};
+        let communityPosts = NetAPI.load(KEYS.posts) || [];
+        let socialProfile = NetAPI.load(KEYS.profile) || { name: 'Omni User', bio: '每天都要比昨天更強！', avatar: '', followers: 128, following: 45, likedPosts: [] };
+        if(!socialProfile.likedPosts) socialProfile.likedPosts = [];
+        
+        let currentGymPlanDay = '週一';
+        let currentGymPlanType = 'strength'; 
+        let today = new Date().toLocaleDateString();
+        let currentPlanDate = today;
+        let todayMacroChart, planMacroChart, trendChart, weightChart, gymChartInstance;
+        let tempRecipeIngs = []; 
+        let restTimer; 
+        let currentGymType = 'strength'; 
+        let currentWeightRange = 7;
+        let currentCalMonth = new Date();
+        let activeFood = { today: {p:0, c:0, f:0}, plan: {p:0, c:0, f:0} };
+
+        // ================= 導航切換 =================
+        function showTab(t) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(t + 'Tab').classList.add('active');
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active'));
+            document.getElementById('n-' + t).classList.add('nav-active');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+            
+            if(t === 'user') { renderUserStats(); setTimeout(initCharts, 100); }
+            if(t === 'gym') { renderGym(); setTimeout(initGymChart, 100); renderHistoryCalendar(); }
+            if(t === 'mealHub') renderLogs();
+            if(t === 'community') { renderProfile(); renderFeed(); }
+        }
+
+        function switchMealSub(st) {
+            document.querySelectorAll('.meal-sub-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('subContent-' + st).classList.remove('hidden');
+            document.querySelectorAll('#mealHubTab .sub-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById('sub-' + st).classList.add('active');
+            if(st === 'planner') initPlannerDates();
+            if(st === 'library') renderSavedRecipes();
+        }
+
+        function switchGymSub(st) {
+            document.querySelectorAll('.gym-sub-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('gsubContent-' + st).classList.remove('hidden');
+            document.querySelectorAll('#gymTab .sub-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById('gsub-' + st).classList.add('active');
+            if(st === 'history') renderHistoryCalendar();
+            if(st === 'planner') initGymPlannerDays();
+            if(st === 'today') { renderGym(); setTimeout(initGymChart, 100); }
+        }
+
+        function switchCommSub(st) {
+            document.querySelectorAll('.comm-sub-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('csubContent-' + st).classList.remove('hidden');
+            document.querySelectorAll('#communityTab .sub-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById('csub-' + st).classList.add('active');
+            if(st === 'feed') renderFeed();
+            if(st === 'profile') renderProfile();
+        }
+
+        function setGymType(type) {
+            currentGymType = type;
+            if(type === 'strength') {
+                document.getElementById('btnStrength').classList.add('active'); document.getElementById('btnCardio').classList.remove('active-cardio');
+                document.getElementById('strengthInputs').classList.remove('hidden'); document.getElementById('cardioInputs').classList.add('hidden');
+                document.getElementById('gName').placeholder = currentLang==='en'?"🔍 Search Strength...":"🔍 搜尋重量訓練...";
+            } else {
+                document.getElementById('btnCardio').classList.add('active-cardio'); document.getElementById('btnStrength').classList.remove('active');
+                document.getElementById('cardioInputs').classList.remove('hidden'); document.getElementById('strengthInputs').classList.add('hidden');
+                document.getElementById('gName').placeholder = currentLang==='en'?"🔍 Search Cardio...":"🔍 搜尋有氧運動...";
+            }
+            document.getElementById('gymSearchRes').classList.add('hidden'); document.getElementById('gName').value = '';
+        }
+
+        function setGymPlanType(type) {
+            currentGymPlanType = type;
+            if(type === 'strength') {
+                document.getElementById('btnPlanStrength').classList.add('active'); document.getElementById('btnPlanCardio').classList.remove('active-cardio');
+                document.getElementById('strengthPlanInputs').classList.remove('hidden'); document.getElementById('cardioPlanInputs').classList.add('hidden');
+                document.getElementById('gPlanName').placeholder = currentLang==='en'?"🔍 Search Strength...":"🔍 搜尋重量訓練...";
+            } else {
+                document.getElementById('btnPlanCardio').classList.add('active-cardio'); document.getElementById('btnPlanStrength').classList.remove('active');
+                document.getElementById('cardioPlanInputs').classList.remove('hidden'); document.getElementById('strengthPlanInputs').classList.add('hidden');
+                document.getElementById('gPlanName').placeholder = currentLang==='en'?"🔍 Search Cardio...":"🔍 搜尋有氧運動...";
+            }
+            document.getElementById('gymPlanSearchRes').classList.add('hidden'); document.getElementById('gPlanName').value = '';
+        }
+
+        // ================= 搜尋與份量修改 =================
+        function searchFood(q, mode) {
+            const boxes = { 'today':'searchRes', 'recipe':'recipeSearchRes', 'plan':'planSearchRes' }; const box = document.getElementById(boxes[mode]);
+            if(!q) { box.classList.add('hidden'); return; }
+            let pool = (mode === 'today' || mode === 'plan') ? [...recipes, ...baseDB] : [...baseDB];
+            const matches = pool.filter(f => f.name.toLowerCase().includes(q.toLowerCase())).slice(0, 10);
+            box.innerHTML = matches.map(f => {
+                let kcal = Math.round(f.p*4 + f.c*4 + f.f*9);
+                return `<div class="p-5 border-b border-slate-100 dark:border-slate-800 cursor-pointer font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors text-slate-800 dark:text-slate-200" onclick="selectFood('${f.name.replace(/'/g, "\\'")}', ${f.p}, ${f.c}, ${f.f}, '${mode}')">
+                    <span class="opacity-60 mr-2 text-lg">${f.isRecipe ? '🍱' : '🥦'}</span>${f.name} 
+                    <span class="text-blue-600 dark:text-blue-400 float-right bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-lg text-[11px] font-black">${kcal} kcal</span>
+                </div>`;
+            }).join(''); box.classList.remove('hidden');
+        }
+
+        function selectFood(n, p, c, f, mode) {
+            let pEl = mode==='today' ? 'pIn' : 'planPIn'; let cEl = mode==='today' ? 'cIn' : 'planCIn'; let fEl = mode==='today' ? 'fIn' : 'planFIn';
+            let searchEl = mode==='today' ? 'foodSearch' : 'planSearch'; let qtyEl = mode==='today' ? 'foodQty' : 'planQty';
+            if(mode === 'recipe') { tempRecipeIngs.push({ name: n, p, c, f }); renderTempRecipe(); document.getElementById('recipeIngSearch').value = ''; } 
+            else { document.getElementById(searchEl).value = n; activeFood[mode] = { p:p, c:c, f:f }; if(document.getElementById(qtyEl)) document.getElementById(qtyEl).value = 1; document.getElementById(pEl).value = p; document.getElementById(cEl).value = c; document.getElementById(fEl).value = f; }
+            document.querySelectorAll('.suggestion-box').forEach(b => b.classList.add('hidden'));
+        }
+
+        function changeFoodQty(delta, mode) { let qtyEl = document.getElementById(mode==='today' ? 'foodQty' : 'planQty'); if(!qtyEl) return; let newQty = parseFloat(qtyEl.value) + delta; if(newQty < 0.1) newQty = 0.1; qtyEl.value = Number.isInteger(newQty) ? newQty : newQty.toFixed(1); updateFoodMacros(mode); }
+        function updateFoodMacros(mode) { let qty = parseFloat(document.getElementById(mode==='today' ? 'foodQty' : 'planQty').value) || 1; let base = activeFood[mode]; document.getElementById(mode==='today' ? 'pIn' : 'planPIn').value = parseFloat((base.p * qty).toFixed(1)); document.getElementById(mode==='today' ? 'cIn' : 'planCIn').value = parseFloat((base.c * qty).toFixed(1)); document.getElementById(mode==='today' ? 'fIn' : 'planFIn').value = parseFloat((base.f * qty).toFixed(1)); }
+
+        function searchGym(q, mode) {
+            const box = mode === 'today' ? document.getElementById('gymSearchRes') : document.getElementById('gymPlanSearchRes'); if(!q) { box.classList.add('hidden'); return; }
+            let gymType = mode === 'today' ? currentGymType : currentGymPlanType; const pool = gymType === 'cardio' ? cardioDB : gymDB;
+            const matches = pool.filter(n => n.toLowerCase().includes(q.toLowerCase())).slice(0, 6);
+            box.innerHTML = matches.map(n => `<div class="p-5 border-b border-slate-100 dark:border-slate-800 cursor-pointer font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors text-slate-800 dark:text-slate-200" onclick="selectGym('${n.replace(/'/g, "\\'")}', '${mode}')">${gymType==='cardio'?'🏃':'🏋️'} ${n}</div>`).join('');
+            if(matches.length > 0) box.classList.remove('hidden'); else box.classList.add('hidden');
+        }
+        function selectGym(n, mode) { if(mode === 'today') { document.getElementById('gName').value = n; document.getElementById('gymSearchRes').classList.add('hidden'); } else { document.getElementById('gPlanName').value = n; document.getElementById('gymPlanSearchRes').classList.add('hidden'); } }
+
+        // ================= 飲食與規劃渲染 =================
+        function addLog() {
+            let baseName = document.getElementById('foodSearch').value; if(!baseName) return;
+            let qty = parseFloat(document.getElementById('foodQty').value) || 1; let finalName = qty !== 1 ? `${baseName} x${qty}` : baseName;
+            if(!logs[today]) logs[today] = [];
+            logs[today].push({ name: finalName, p: parseFloat(document.getElementById('pIn').value)||0, c: parseFloat(document.getElementById('cIn').value)||0, f: parseFloat(document.getElementById('fIn').value)||0, time: document.getElementById('mealTime').value });
+            NetAPI.save(KEYS.logs, logs); document.getElementById('foodSearch').value = ''; document.getElementById('pIn').value=''; document.getElementById('cIn').value=''; document.getElementById('fIn').value=''; document.getElementById('foodQty').value = 1; activeFood.today = {p:0, c:0, f:0}; renderLogs();
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('todayMealDisplay'); container.innerHTML = ''; let sp=0, sc=0, sf=0;
+            const labels = currentLang === 'en' ? { breakfast: '🌅 Breakfast', lunch: '☀️ Lunch', dinner: '🌙 Dinner', snack: '🍏 Snack' } : { breakfast: '🌅 早餐', lunch: '☀️ 午餐', dinner: '🌙 晚餐', snack: '🍏 點心' };
+            Object.keys(labels).forEach(tk => {
+                const sl = (logs[today]||[]).filter(l => l.time === tk || (!l.time && tk === 'snack'));
+                if(sl.length > 0) {
+                    let html = `<div class="meal-section"><h4 class="meal-section-title">${labels[tk]}</h4>`;
+                    sl.forEach((l, idx) => {
+                        sp+=l.p; sc+=l.c; sf+=l.f; let kcal = Math.round(l.p*4 + l.c*4 + l.f*9);
+                        html += `<div class="card p-5 mb-3 flex justify-between items-center border-l-[4px] border-blue-500 shadow-sm relative overflow-hidden group hover:border-l-8 transition-all"><div class="relative z-10 w-full pr-10"><p class="font-black text-sm mb-1.5 truncate text-slate-800 dark:text-white tracking-tight">${l.name}</p><div class="flex gap-2"><span class="bg-slate-100 dark:bg-slate-800 text-[9px] font-black px-2 py-0.5 rounded text-slate-500 dark:text-slate-400 uppercase tracking-wider">P:${l.p} C:${l.c} F:${l.f}</span><span class="bg-blue-50 dark:bg-blue-900/30 text-[9px] font-black px-2 py-0.5 rounded text-blue-600 dark:text-blue-400 uppercase">${kcal} kcal</span></div></div><button onclick="removeLog('${tk}', ${idx})" class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 dark:bg-red-900/20 text-red-500 font-black flex items-center justify-center btn-press z-10 transition-colors">✕</button></div>`;
+                    }); container.innerHTML += html + `</div>`;
+                }
+            });
+            let total = Math.round(sp*4 + sc*4 + sf*9); let pPct = total > 0 ? Math.round((sp*4/total)*100) : 0; let cPct = total > 0 ? Math.round((sc*4/total)*100) : 0; let fPct = total > 0 ? Math.round((sf*9/total)*100) : 0;
+            document.getElementById('sumP').innerHTML = `${sp.toFixed(1)}g <br><span class="text-[10px] font-bold opacity-60 text-blue-500">(${pPct}%)</span>`; document.getElementById('sumC').innerHTML = `${sc.toFixed(1)}g <br><span class="text-[10px] font-bold opacity-60 text-emerald-500">(${cPct}%)</span>`; document.getElementById('sumF').innerHTML = `${sf.toFixed(1)}g <br><span class="text-[10px] font-bold opacity-60 text-amber-500">(${fPct}%)</span>`; document.getElementById('sumKcal').innerText = total;
+            let bmr = (10*user.w)+(6.25*user.h)-(5*user.a); bmr = user.gender === 'male' ? bmr+5 : bmr-161; let tdee = Math.round(bmr*user.act); let goal = user.targetW < user.w ? tdee - 300 : (user.targetW > user.w ? tdee + 300 : tdee);
+            document.getElementById('todayGoalKcal').innerText = goal || 0; updateMacroChart(sp, sc, sf);
+        }
+        function removeLog(tk, idx) { logs[today].splice(logs[today].indexOf(logs[today].filter(l => l.time === tk || (!l.time && tk === 'snack'))[idx]), 1); NetAPI.save(KEYS.logs, logs); renderLogs(); }
+        function addWater(amt) { user.water[today] = Math.max(0, (user.water[today] || 0) + amt); NetAPI.save(KEYS.user, user); renderWater(); }
+        function renderWater() { document.getElementById('waterCurrent').innerText = (user.water[today] || 0) + ' ml'; }
+
+        // ====== Planner 7日規劃 ======
+        function initPlannerDates() { const bar = document.getElementById('plannerDateBar'); bar.innerHTML = ''; for(let i=0; i<7; i++) { let d = new Date(); d.setDate(d.getDate()+i); let ds = d.toLocaleDateString(); bar.innerHTML += `<div class="date-chip ${ds === currentPlanDate ? 'active' : ''}" onclick="selectPlanDate('${ds}')">${i===0?(currentLang==='en'?'Today':'今天'):(d.getMonth()+1)+'/'+d.getDate()}</div>`; } document.getElementById('selectedPlanDateText').innerText = currentPlanDate; renderPlannerDetail(currentPlanDate); }
+        function selectPlanDate(ds) { currentPlanDate = ds; initPlannerDates(); }
+        function addPlan() { let baseName = document.getElementById('planSearch').value; if(!baseName) return; let qty = parseFloat(document.getElementById('planQty').value) || 1; let finalName = qty !== 1 ? `${baseName} x${qty}` : baseName; if(!planner[currentPlanDate]) planner[currentPlanDate] = []; planner[currentPlanDate].push({ name: finalName, p: parseFloat(document.getElementById('planPIn').value)||0, c: parseFloat(document.getElementById('planCIn').value)||0, f: parseFloat(document.getElementById('planFIn').value)||0, time: document.getElementById('planMealTime').value }); NetAPI.save(KEYS.plans, planner); document.getElementById('planSearch').value = ''; document.getElementById('planPIn').value=''; document.getElementById('planCIn').value=''; document.getElementById('planFIn').value=''; document.getElementById('planQty').value = 1; activeFood.plan = {p:0, c:0, f:0}; renderPlannerDetail(currentPlanDate); }
+        function renderPlannerDetail(ds) { const container = document.getElementById('planDetailList'); container.innerHTML = ''; let pp=0, pc=0, pf=0; const labels = currentLang === 'en' ? { breakfast: '🌅 Breakfast', lunch: '☀️ Lunch', dinner: '🌙 Dinner', snack: '🍏 Snack' } : { breakfast: '🌅 早餐', lunch: '☀️ 午餐', dinner: '🌙 晚餐', snack: '🍏 點心' }; Object.keys(labels).forEach(tk => { const sp = (planner[ds]||[]).filter(p => p.time === tk); if(sp.length > 0) { let html = `<div class="meal-section"><h4 class="meal-section-title">${labels[tk]}</h4>`; sp.forEach((p, idx) => { pp+=p.p; pc+=p.c; pf+=p.f; let kcal = Math.round(p.p*4 + p.c*4 + p.f*9); html += `<div class="card p-5 mb-3 flex justify-between items-center border-l-[4px] border-amber-500 hover:border-l-8 transition-all"><div><p class="font-black text-sm truncate max-w-[200px] text-slate-800 dark:text-white tracking-tight">${p.name}</p><p class="text-[10px] font-black opacity-60 uppercase mt-1">P:${p.p} C:${p.c} F:${p.f} <span class="text-amber-500 dark:text-amber-400 ml-2">${kcal}kcal</span></p></div><button onclick="removePlan('${ds}', '${tk}', ${idx})" class="text-red-400 font-black px-2 btn-press">✕</button></div>`; }); container.innerHTML += html + `</div>`; } }); let planTotal = Math.round(pp*4 + pc*4 + pf*9); let ppPct = planTotal > 0 ? Math.round(((pp*4)/planTotal)*100) : 0; let cpPct = planTotal > 0 ? Math.round(((pc*4)/planTotal)*100) : 0; let fpPct = planTotal > 0 ? Math.round(((pf*9)/planTotal)*100) : 0; document.getElementById('planP').innerHTML = `${pp.toFixed(1)}g <span class="opacity-80 font-black ml-1 text-amber-100">(${ppPct}%)</span>`; document.getElementById('planC').innerHTML = `${pc.toFixed(1)}g <span class="opacity-80 font-black ml-1 text-orange-100">(${cpPct}%)</span>`; document.getElementById('planF').innerHTML = `${pf.toFixed(1)}g <span class="opacity-80 font-black ml-1 text-yellow-100">(${fpPct}%)</span>`; document.getElementById('planTotalKcal').innerText = planTotal + " kcal"; updatePlanChart(pp, pc, pf); }
+        function updatePlanChart(p, c, f) { const ctx = document.getElementById('planMacroChart').getContext('2d'); if(planMacroChart) planMacroChart.destroy(); planMacroChart = new Chart(ctx, { type:'doughnut', data:{ datasets:[{data:[p*4||0.1, c*4||0.1, f*9||0.1], backgroundColor:['#fbbf24','#f97316','#fef08a'], borderWidth:0}]}, options:{cutout:'75%', layout:{padding:0}, plugins:{legend:{display:false}, tooltip:{enabled:false}}} }); }
+        function removePlan(ds, tk, idx) { planner[ds].splice(planner[ds].indexOf(planner[ds].filter(p => p.time === tk)[idx]), 1); NetAPI.save(KEYS.plans, planner); renderPlannerDetail(ds); }
+        function renderTempRecipe() { document.getElementById('tempIngList').innerHTML = tempRecipeIngs.map((ing, i) => `<li class="flex justify-between items-center p-4 bg-white dark:bg-slate-900 rounded-2xl text-sm font-black shadow-sm border border-slate-100 dark:border-slate-800"><span>${ing.name} <span class="text-[10px] opacity-50 ml-2">P:${ing.p} C:${ing.c} F:${ing.f}</span></span><button onclick="tempRecipeIngs.splice(${i},1);renderTempRecipe()" class="w-8 h-8 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center text-xs btn-press">✕</button></li>`).join(''); }
+        function saveRecipe() { const name = document.getElementById('newRecipeName').value; if(!name || tempRecipeIngs.length === 0) return; let tp=0, tc=0, tf=0; tempRecipeIngs.forEach(i => { tp += i.p; tc += i.c; tf += i.f; }); recipes.push({ name, p: parseFloat(tp.toFixed(1)), c: parseFloat(tc.toFixed(1)), f: parseFloat(tf.toFixed(1)), isRecipe: true }); NetAPI.save(KEYS.recipes, recipes); tempRecipeIngs = []; document.getElementById('newRecipeName').value = ''; renderTempRecipe(); renderSavedRecipes(); }
+        function renderSavedRecipes() { document.getElementById('savedRecipesList').innerHTML = recipes.map((r, i) => `<div class="card p-5 mb-3 flex justify-between items-center border-l-[4px] border-emerald-500 hover:border-l-8 transition-all"><div><p class="font-black text-sm mb-1 text-slate-800 dark:text-white tracking-tight">🍱 ${r.name}</p><p class="text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded inline-block text-slate-500 dark:text-slate-400">P:${r.p} C:${r.c} F:${r.f}</p></div><button onclick="recipes.splice(${i},1);NetAPI.save(KEYS.recipes,recipes);renderSavedRecipes()" class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 font-black flex items-center justify-center btn-press">✕</button></div>`).join(''); }
+        function updateMacroChart(p,c,f) { const ctx = document.getElementById('todayMacroChart').getContext('2d'); if(todayMacroChart) todayMacroChart.destroy(); todayMacroChart = new Chart(ctx, { type:'doughnut', data:{ datasets:[{data:[p*4||0.1, c*4||0.1, f*9||0.1], backgroundColor:['#2563eb','#10b981','#f59e0b'], borderWidth:0, hoverOffset: 4}]}, options:{cutout:'75%', layout:{padding:0}, plugins:{legend:{display:false}, tooltip:{enabled:false}}} }); }
+
+        // ====== 用戶數據與圖表 ======
+        function updateUser() {
+            user.w = parseFloat(document.getElementById('uW').value); user.targetW = parseFloat(document.getElementById('uTargetW').value); user.h = parseFloat(document.getElementById('uH').value); user.a = parseInt(document.getElementById('uA').value); user.act = parseFloat(document.getElementById('uAct').value); user.gender = document.getElementById('uGender').value;
+            if(!user.weights) user.weights = []; let existingWeight = user.weights.find(w => w.d === today); if(existingWeight) { existingWeight.v = user.w; } else { user.weights.push({d:today, v:user.w}); } user.weights.sort((a,b) => new Date(a.d) - new Date(b.d));
+            NetAPI.save(KEYS.user, user); renderUserStats(); initCharts(); renderLogs();
+        }
+
+        function renderUserStats() {
+            let bmr = (10*user.w)+(6.25*user.h)-(5*user.a); bmr = user.gender === 'male' ? bmr+5 : bmr-161; let tdee = Math.round(bmr*user.act); let goal = user.targetW < user.w ? tdee - 300 : (user.targetW > user.w ? tdee + 300 : tdee);
+            if(document.getElementById('dispTdee')) document.getElementById('dispTdee').innerText = tdee || '--'; if(document.getElementById('dispBmi')) document.getElementById('dispBmi').innerText = (user.w / ((user.h/100)**2)).toFixed(1) || '--'; if(document.getElementById('dispToTarget')) document.getElementById('dispToTarget').innerText = Math.abs(user.w - user.targetW).toFixed(1) + "kg"; if(document.getElementById('statGoalKcal')) document.getElementById('statGoalKcal').innerText = goal || 0; if(document.getElementById('todayGoalKcal')) document.getElementById('todayGoalKcal').innerText = goal || 0;
+            let labelZh = user.targetW < user.w ? '減脂期目標' : (user.targetW > user.w ? '增肌期目標' : '維持現狀'); let labelEn = user.targetW < user.w ? 'Fat Loss Goal' : (user.targetW > user.w ? 'Muscle Gain Goal' : 'Maintenance');
+            if(document.getElementById('todayGoalLabel')) document.getElementById('todayGoalLabel').innerText = currentLang === 'en' ? labelEn : labelZh; if(document.getElementById('statGoalLogic')) document.getElementById('statGoalLogic').innerText = currentLang === 'en' ? `🎯 Logic: ${labelEn}` : `🎯 判定：${labelZh}`;
+        }
+
+        function setWeightRange(range) { currentWeightRange = range; initCharts(); }
+
+        function initCharts() {
+            if(trendChart) trendChart.destroy(); if(weightChart) weightChart.destroy();
+            const last7 = [...Array(7)].map((_, i) => { let d = new Date(); d.setDate(d.getDate()-(6-i)); return d.toLocaleDateString(); });
+            const calData = last7.map(d => (logs[d]||[]).reduce((sum, item) => sum + (item.p*4+item.c*4+item.f*9), 0)); const calLabels = last7.map(d => { let p = d.split('/'); return p.length === 3 ? `${p[1]}/${p[2]}` : d; });
+            if(document.getElementById('trendChart')) {
+                trendChart = new Chart(document.getElementById('trendChart'), { type:'bar', data:{ labels: calLabels, datasets:[{ label: currentLang==='en'?'Calories':'熱量', data: calData, backgroundColor:'#3b82f6', borderRadius:12, barThickness: 16}]}, options:{ maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{display:false, grid:{display:false}}, x:{grid:{display:false}, border:{display:false}}}} });
+            }
+            let wtData = user.weights || []; if(currentWeightRange !== 'all') wtData = wtData.slice(-currentWeightRange);
+            const labels = wtData.map(w => { let parts = w.d.split('/'); return parts.length === 3 ? `${parts[1]}/${parts[2]}` : w.d; }); const values = wtData.map(w => w.v);
+            if(document.getElementById('weightChart')) {
+                weightChart = new Chart(document.getElementById('weightChart'), { type:'line', data:{ labels: labels, datasets:[{ label: currentLang==='en'?'Weight':'體重', data: values, borderColor:'#8b5cf6', borderWidth:4, pointBackgroundColor:'#fff', pointBorderColor:'#8b5cf6', pointBorderWidth:3, pointRadius:5, fill:true, backgroundColor:'rgba(139,92,246,0.1)', tension:0.4 }]}, options:{ maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{display:false, grid:{display:false}}, x:{display:true, grid:{display:false}, border:{display:false}} } } });
+            }
+        }
+
+        // ====== GYM 與直覺日曆 ======
+        function startRestTimer(seconds) {
+            clearInterval(restTimer); let t = parseInt(seconds) || 90;
+            const display = document.getElementById('restTimerDisplay'); const text = document.getElementById('restTimerText'); display.classList.remove('hidden');
+            if ("Notification" in window && Notification.permission !== "granted") { Notification.requestPermission(); }
+            restTimer = setInterval(() => {
+                t--; let m = Math.floor(t/60).toString().padStart(2,'0'); let s = (t%60).toString().padStart(2,'0'); text.innerText = (currentLang==='en'?'Rest: ':'休息: ') + `${m}:${s}`;
+                if(t <= 0) {
+                    clearInterval(restTimer); text.innerText = "🔥";
+                    if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 800]);
+                    if ("Notification" in window && Notification.permission === "granted") { new Notification("OmniFit", { body: currentLang === 'en' ? "Rest is over! 💪" : "休息結束，下一組！💪", icon: "https://cdn-icons-png.flaticon.com/512/2964/2964514.png" }); }
+                    setTimeout(() => display.classList.add('hidden'), 3000);
+                }
+            }, 1000);
+        }
+        function stopRestTimer() { clearInterval(restTimer); document.getElementById('restTimerDisplay').classList.add('hidden'); }
+
+        function copyGym(idx) {
+            let g = gym[today][idx]; setGymType(g.type || 'strength'); document.getElementById('gName').value = g.n;
+            if(g.type === 'cardio') { document.getElementById('gMins').value = g.mins; document.getElementById('gKm').value = g.km; } 
+            else { document.getElementById('gW').value = g.w; document.getElementById('gS').value = g.s; document.getElementById('gR').value = g.r; }
+            window.scrollTo({ top: document.getElementById('gymTab').offsetTop, behavior: 'smooth' });
+        }
+
+        function addGym() {
+            let name = document.getElementById('gName').value; if(!name) return;
+            if(!gym[today]) gym[today] = [];
+            if(currentGymType === 'strength') {
+                let w = parseFloat(document.getElementById('gW').value)||0, s = parseInt(document.getElementById('gS').value)||0, r = parseInt(document.getElementById('gR').value)||0;
+                gym[today].push({ type: 'strength', n: name, w: w, s: s, r: r, v: w*s*r }); document.getElementById('gW').value = ''; document.getElementById('gS').value = ''; document.getElementById('gR').value = '';
+            } else {
+                let mins = parseFloat(document.getElementById('gMins').value)||0, km = parseFloat(document.getElementById('gKm').value)||0;
+                gym[today].push({ type: 'cardio', n: name, mins: mins, km: km, v: mins * 10 }); document.getElementById('gMins').value = ''; document.getElementById('gKm').value = '';
+            }
+            NetAPI.save(KEYS.gym, gym); document.getElementById('gName').value = ''; renderGym(); setTimeout(initGymChart, 100); renderHistoryCalendar();
+        }
+
+        function renderGym() {
+            let dailyVol = 0; let maxWeights = {};
+            for(let d in gym) { gym[d].forEach(g => { if(g.type !== 'cardio' && (!maxWeights[g.n] || g.w > maxWeights[g.n])) maxWeights[g.n] = g.w; }); }
+            document.getElementById('gymLogs').innerHTML = (gym[today]||[]).map((g, idx) => {
+                dailyVol += g.v; let detailsHTML = '';
+                if(g.type === 'cardio') {
+                    detailsHTML = `<div class="flex items-baseline gap-2 mt-1 text-emerald-600 dark:text-emerald-400"><span class="text-xl font-black tracking-tighter">${g.mins}</span><span class="text-[10px] font-bold opacity-60">Mins</span><span class="text-[10px] font-bold opacity-20 mx-1">|</span><span class="text-xl font-black tracking-tighter">${g.km}</span><span class="text-[10px] font-bold opacity-60">KM</span></div>`;
+                } else {
+                    let prBadge = (g.w > 0 && g.w >= maxWeights[g.n]) ? '<span class="pr-badge px-2 py-0.5 rounded-full text-[9px] font-black ml-2 shadow-lg tracking-widest inline-block">👑 PR</span>' : '';
+                    detailsHTML = `<div class="flex items-center mb-1.5 flex-wrap gap-y-2"><p class="font-black text-base leading-none text-slate-800 dark:text-white tracking-tight">${g.n}</p>${prBadge}</div><div class="flex items-baseline gap-2 mt-1 text-indigo-600 dark:text-indigo-400"><span class="text-xl font-black tracking-tighter">${g.w}</span><span class="text-[10px] font-bold opacity-60">KG</span><span class="text-[10px] font-bold opacity-30 mx-1">×</span><span class="text-xl font-black tracking-tighter">${g.s}</span><span class="text-[10px] font-bold opacity-60">Sets</span><span class="text-[10px] font-bold opacity-30 mx-1">×</span><span class="text-xl font-black tracking-tighter">${g.r}</span><span class="text-[10px] font-bold opacity-60">Reps</span></div>`;
+                }
+                let borderColor = g.type === 'cardio' ? 'border-emerald-500' : 'border-indigo-500';
+                return `<div class="card p-5 mb-4 border-l-[4px] ${borderColor} shadow-sm relative overflow-hidden group hover:border-l-8 transition-all"><div class="flex justify-between items-center relative z-10"><div class="flex-1">${g.type === 'cardio' ? `<p class="font-black text-base leading-none mb-2 text-slate-800 dark:text-white tracking-tight">${g.n}</p>` : ''}${detailsHTML}</div><div class="flex flex-col gap-2.5"><button onclick="copyGym(${idx})" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-blue-600 font-black flex items-center justify-center btn-press shadow-sm transition-colors">➕</button><button onclick="removeGym(${idx})" class="w-9 h-9 rounded-full bg-red-50 hover:bg-red-100 dark:bg-red-900/20 text-red-500 font-black flex items-center justify-center btn-press shadow-sm transition-colors">✕</button></div></div></div>`;
+            }).join('');
+            document.getElementById('dailyVolume').innerText = dailyVol;
+        }
+
+        function removeGym(idx) { gym[today].splice(idx, 1); NetAPI.save(KEYS.gym, gym); renderGym(); setTimeout(initGymChart, 100); renderHistoryCalendar(); }
+
+        function initGymChart() {
+            if(gymChartInstance) gymChartInstance.destroy();
+            const last7 = [...Array(7)].map((_, i) => { let d = new Date(); d.setDate(d.getDate() - (6 - i)); return d.toLocaleDateString(); });
+            const volData = last7.map(d => (gym[d] || []).reduce((sum, item) => sum + item.v, 0));
+            gymChartInstance = new Chart(document.getElementById('gymVolumeChart'), {
+                type: 'line', data: { labels: last7.map(d=> { let p=d.split('/'); return p.length===3?`${p[1]}/${p[2]}`:d; }), datasets: [{ data: volData, borderColor: '#6366f1', borderWidth: 4, backgroundColor: 'rgba(99, 102, 241, 0.15)', fill: true, tension: 0.4, pointRadius:0, pointHitRadius: 10 }] },
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: {enabled:false} }, scales: { x: { display: false, grid: {display:false} }, y: { display: false, min: 0, grid:{display:false} } }, layout: {padding: 0} }
             });
         }
+
+        function changeCalMonth(delta) { currentCalMonth.setMonth(currentCalMonth.getMonth() + delta); renderHistoryCalendar(); }
+        function renderHistoryCalendar() {
+            const y = currentCalMonth.getFullYear(); const m = currentCalMonth.getMonth(); document.getElementById('calMonthYear').innerText = `${y} / ${(m+1).toString().padStart(2, '0')}`;
+            const firstDay = new Date(y, m, 1).getDay(); const daysInMonth = new Date(y, m + 1, 0).getDate(); let gridHTML = '';
+            for(let i=0; i<firstDay; i++) { gridHTML += `<div class="cal-day empty"></div>`; }
+            let todayObj = new Date(); let isCurrentMonth = (todayObj.getFullYear() === y && todayObj.getMonth() === m); let todayDate = todayObj.getDate();
+            for(let i=1; i<=daysInMonth; i++) {
+                let dateStr = new Date(y, m, i).toLocaleDateString(); let hasGym = gym[dateStr] && gym[dateStr].length > 0; let dotHTML = hasGym ? `<div class="cal-dot"></div>` : '';
+                let isTodayClass = (isCurrentMonth && i === todayDate) ? 'border border-indigo-500 text-indigo-500 font-black' : '';
+                gridHTML += `<div class="cal-day ${isTodayClass}" onclick="selectCalDate('${dateStr}', this)">${i}${dotHTML}</div>`;
+            }
+            document.getElementById('calGrid').innerHTML = gridHTML;
+        }
+
+        function selectCalDate(dateStr, el) { document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('active')); el.classList.add('active'); renderGymHistory(dateStr); }
+        function renderGymHistory(dateStr) {
+            const container = document.getElementById('gymHistoryList'); let dayGym = gym[dateStr] || [];
+            if(dayGym.length === 0) { container.innerHTML = `<p class="text-center opacity-40 font-bold py-10 text-sm" data-i18n="select_date_cal">${currentLang==='en'?'Please select a date':'請選擇日曆上的日期'}</p>`; return; }
+            let dailyVol = dayGym.reduce((sum, g) => sum + g.v, 0);
+            let html = `<div class="flex justify-between items-end px-2 mb-6 mt-4"><h4 class="text-sm font-black text-slate-800 dark:text-white">${dateStr}</h4><span class="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1 rounded-lg">Vol: ${dailyVol}</span></div>`;
+            dayGym.forEach(g => { html += `<div class="card p-5 mb-3 flex justify-between items-center border-l-[3px] border-indigo-400 dark:border-indigo-600 shadow-sm"><div><p class="font-black text-base mb-1 text-slate-800 dark:text-white tracking-tight">${g.n}</p><p class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">${g.type==='cardio' ? `${g.mins}mins × ${g.km}km` : `${g.w}kg × ${g.s}sets × ${g.r}reps`}</p></div></div>`; });
+            container.innerHTML = html;
+        }
+
+        function initGymPlannerDays() {
+            const bar = document.getElementById('gymPlannerDateBar'); bar.innerHTML = '';
+            WEEK_DAYS.forEach(day => { let displayDay = dayLabels[currentLang][day]; bar.innerHTML += `<div class="date-chip ${day === currentGymPlanDay ? 'active' : ''}" onclick="selectGymPlanDay('${day}')">${displayDay}</div>`; });
+            document.getElementById('selectedGymPlanDayText').innerText = dayLabels[currentLang][currentGymPlanDay]; renderGymPlanList();
+        }
+        function selectGymPlanDay(day) { currentGymPlanDay = day; initGymPlannerDays(); }
+        function addGymPlan() {
+            let name = document.getElementById('gPlanName').value; if(!name) return; let entry = { type: currentGymPlanType, n: name };
+            if(currentGymPlanType === 'strength') { entry.w = parseFloat(document.getElementById('gPlanW').value)||0; entry.s = parseInt(document.getElementById('gPlanS').value)||0; entry.r = parseInt(document.getElementById('gPlanR').value)||0; } else { entry.mins = parseFloat(document.getElementById('gPlanMins').value)||0; entry.km = parseFloat(document.getElementById('gPlanKm').value)||0; }
+            gymPlanner[currentGymPlanDay].push(entry); NetAPI.save(KEYS.gymPlans, gymPlanner);
+            document.getElementById('gPlanName').value = ''; 
+            if(document.getElementById('gPlanW')) document.getElementById('gPlanW').value = ''; if(document.getElementById('gPlanS')) document.getElementById('gPlanS').value = ''; if(document.getElementById('gPlanR')) document.getElementById('gPlanR').value = '';
+            if(document.getElementById('gPlanMins')) document.getElementById('gPlanMins').value = ''; if(document.getElementById('gPlanKm')) document.getElementById('gPlanKm').value = ''; renderGymPlanList();
+        }
+        function renderGymPlanList() {
+            const container = document.getElementById('gymPlanList');
+            container.innerHTML = (gymPlanner[currentGymPlanDay]||[]).map((g, idx) => {
+                let desc = g.type === 'cardio' ? `${g.mins}mins × ${g.km}km` : `${g.w}kg × ${g.s}sets × ${g.r}reps`; let bColor = g.type === 'cardio' ? 'border-emerald-400' : 'border-indigo-400';
+                return `<div class="card p-5 mb-3 flex justify-between items-center border-l-[3px] ${bColor} shadow-sm"><div><p class="font-black text-sm text-slate-800 dark:text-white tracking-tight">${g.n}</p><p class="text-[10px] font-bold opacity-60 uppercase text-slate-500 dark:text-slate-400 mt-0.5">${desc}</p></div><button onclick="removeGymPlan(${idx})" class="text-red-400 font-black px-2 btn-press">✕</button></div>`;
+            }).join('');
+        }
+        function removeGymPlan(idx) { gymPlanner[currentGymPlanDay].splice(idx, 1); NetAPI.save(KEYS.gymPlans, gymPlanner); renderGymPlanList(); }
+
+        // ====== 社群功能 ======
+        function renderProfile() {
+            document.getElementById('profileName').value = socialProfile.name; document.getElementById('profileBio').value = socialProfile.bio;
+            document.getElementById('profileFollowers').innerText = socialProfile.followers; document.getElementById('profileFollowing').innerText = socialProfile.following;
+            if(socialProfile.avatar) { document.getElementById('profileAvatarImg').src = socialProfile.avatar; document.getElementById('profileAvatarImg').classList.remove('hidden'); document.getElementById('profileAvatarText').classList.add('hidden'); document.getElementById('postAvatarPreview').src = socialProfile.avatar; document.getElementById('postAvatarPreview').classList.remove('hidden'); document.getElementById('postAvatarFallback').classList.add('hidden'); }
+            let myPosts = communityPosts.filter(p => p.author === socialProfile.name); document.getElementById('profilePostsCount').innerText = myPosts.length;
+            document.getElementById('myPostsGrid').innerHTML = myPosts.map(p => {
+                if(p.media) {
+                    if(p.mediaType === 'video') return `<div class="aspect-square bg-slate-900 rounded-2xl overflow-hidden relative shadow-sm"><video src="${p.media}" class="w-full h-full object-cover opacity-80"></video><span class="absolute top-2 right-2 text-white drop-shadow-md text-xs">📹</span></div>`;
+                    return `<div class="aspect-square bg-slate-900 rounded-2xl overflow-hidden shadow-sm"><img src="${p.media}" class="w-full h-full object-cover"></div>`;
+                } else { return `<div class="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl p-4 flex items-center justify-center text-center shadow-sm"><p class="text-xs font-bold text-slate-600 dark:text-slate-300 line-clamp-4 leading-relaxed">${p.text}</p></div>`; }
+            }).join('');
+        }
+        function saveProfile() { socialProfile.name = document.getElementById('profileName').value || 'Omni User'; socialProfile.bio = document.getElementById('profileBio').value || ''; NetAPI.save(KEYS.profile, socialProfile); renderFeed(); }
+        function uploadAvatar(input) { if(input.files && input.files[0]) { const reader = new FileReader(); reader.onload = function(e) { socialProfile.avatar = e.target.result; NetAPI.save(KEYS.profile, socialProfile); renderProfile(); }; reader.readAsDataURL(input.files[0]); } }
+
+        document.getElementById('mediaUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if(file) {
+                const mediaBox = document.getElementById('mediaBox'); mediaBox.innerHTML = ''; const fileURL = URL.createObjectURL(file);
+                if (file.type.startsWith('video/')) { const videoNode = document.createElement('video'); videoNode.src = fileURL; videoNode.controls = true; videoNode.className = "w-full max-h-[300px] object-contain rounded-xl"; mediaBox.appendChild(videoNode); tempMediaType = 'video'; } 
+                else if (file.type.startsWith('image/')) { const imgNode = document.createElement('img'); imgNode.src = fileURL; imgNode.className = "w-full max-h-[300px] object-cover rounded-xl"; mediaBox.appendChild(imgNode); tempMediaType = 'image'; }
+                const reader = new FileReader(); reader.onloadend = () => { tempMediaData = reader.result; }; reader.readAsDataURL(file);
+                document.getElementById('mediaPreviewContainer').classList.remove('hidden'); if (navigator.vibrate) navigator.vibrate(50);
+            }
+        });
+
+        function publishPost() {
+            const text = document.getElementById('postText').value; const type = document.getElementById('postType').value;
+            if(!text && !tempMediaData) { alert(currentLang==='en'?"Please write something or upload media.":"請輸入內容或上傳媒體！"); return; }
+            const newPost = { id: Date.now(), author: socialProfile.name, avatarURL: socialProfile.avatar, text: text, type: type, media: tempMediaData, mediaType: tempMediaType, date: new Date().toLocaleDateString(), likes: 0, comments: [] };
+            communityPosts.unshift(newPost); NetAPI.save(KEYS.posts, communityPosts);
+            document.getElementById('postText').value = ''; document.getElementById('mediaUpload').value = ''; document.getElementById('mediaPreviewContainer').classList.add('hidden'); tempMediaData = null; tempMediaType = null; switchCommSub('feed');
+        }
+
+        function togglePostMenu(id) { let menu = document.getElementById('postMenu-' + id); if(menu) menu.classList.toggle('hidden'); }
+
+        function renderFeed() {
+            const container = document.getElementById('feedList'); const q = document.getElementById('socialSearch').value.toLowerCase();
+            if(communityPosts.length === 0) { communityPosts = [ { id: 1, author: 'Alex_Fitness', avatarURL: '', text: 'Just hit a new PR on Deadlift! 140kg x 5! 🔥💪', type: 'training', date: '2026/03/24', likes: 12, comments: [{author: 'GymBro', text: 'Beast mode!!'}] }, { id: 2, author: 'HealthyEats', avatarURL: '', text: '今天的增肌餐：烤鮭魚配藜麥與大量蔬菜。', type: 'diet', date: '2026/03/24', likes: 8, comments: [] } ]; }
+            let filteredPosts = communityPosts.filter(p => p.text.toLowerCase().includes(q) || p.author.toLowerCase().includes(q));
+            
+            container.innerHTML = filteredPosts.map(p => {
+                let badge = p.type === 'diet' ? '🍱 Diet' : (p.type === 'training' ? '💪 Training' : '👤 Physique'); let mediaHTML = '';
+                if(p.media) { if(p.mediaType === 'video') { mediaHTML = `<video src="${p.media}" controls class="w-full rounded-2xl mt-4 shadow-sm"></video>`; } else { mediaHTML = `<img src="${p.media}" class="w-full rounded-2xl mt-4 object-cover max-h-80 shadow-sm">`; } }
+                let avatarDOM = p.avatarURL ? `<img src="${p.avatarURL}" class="w-10 h-10 rounded-full object-cover shadow-sm">` : `<div class="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-black shadow-sm">${p.author.charAt(0)}</div>`;
+                let commentsHTML = (p.comments || []).map(c => `<div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl mt-2 text-xs"><span class="font-black text-slate-800 dark:text-white">${c.author}:</span><span class="text-slate-600 dark:text-slate-300 font-medium ml-1">${c.text}</span></div>`).join('');
+                
+                let isLiked = socialProfile.likedPosts.includes(p.id); let heartIcon = isLiked ? '❤️' : '🤍'; let likeColor = isLiked ? 'text-pink-500' : 'text-slate-500 dark:text-slate-400';
+                let reportTxt = currentLang === 'en' ? 'Report Post' : '檢舉貼文'; let blockTxt = currentLang === 'en' ? 'Block User' : '封鎖用戶';
+
+                return `<div class="card p-6 border-t-0 shadow-md">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center gap-3">${avatarDOM}<div><p class="font-black text-sm text-slate-900 dark:text-white tracking-tight">${p.author}</p><p class="text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-wide mt-0.5">${p.date}</p></div></div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-lg tracking-wider">${badge}</span>
+                            <div class="relative"><button onclick="togglePostMenu(${p.id})" class="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 text-lg px-2 btn-press transition-colors">⋮</button>
+                                <div id="postMenu-${p.id}" class="hidden absolute right-0 top-8 bg-white dark:bg-slate-800 shadow-2xl rounded-2xl p-1 z-50 text-xs w-32 border border-slate-100 dark:border-slate-700">
+                                    <button onclick="alert('${currentLang==='en'?'Report Submitted':'已提交檢舉'}'); togglePostMenu(${p.id});" class="w-full text-left p-3 text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors">${reportTxt}</button>
+                                    <button onclick="alert('${currentLang==='en'?'User Blocked':'已封鎖此用戶'}'); togglePostMenu(${p.id});" class="w-full text-left p-3 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl transition-colors mt-1">${blockTxt}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm font-medium text-slate-700 dark:text-slate-200 leading-relaxed">${p.text}</p>
+                    ${mediaHTML}
+                    <div class="mt-5 flex gap-4 pt-4 border-t border-slate-100 dark:border-slate-800"><button class="text-sm font-black ${likeColor} flex items-center gap-1.5 btn-press transition-colors" onclick="likePost(${p.id})">${heartIcon} ${p.likes}</button></div>
+                    <div class="mt-4">${commentsHTML}<div class="mt-3 flex gap-2"><input type="text" id="commentInput-${p.id}" class="comment-input w-full p-3 text-xs font-medium bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500" placeholder="${currentLang==='en'?'Add a comment...':'留言...'}"><button onclick="addComment(${p.id})" class="btn-comment px-5 py-2 bg-slate-900 dark:bg-slate-700 text-white rounded-xl text-xs font-black btn-press shadow-sm">${currentLang==='en'?'Post':'發佈'}</button></div></div>
+                </div>`;
+            }).join('');
+        }
+
+        function likePost(id) {
+            let post = communityPosts.find(p => p.id === id);
+            if(post) { const index = socialProfile.likedPosts.indexOf(id); if(index > -1) { socialProfile.likedPosts.splice(index, 1); post.likes = Math.max(0, post.likes - 1); } else { socialProfile.likedPosts.push(id); post.likes++; } NetAPI.save(KEYS.posts, communityPosts); NetAPI.save(KEYS.profile, socialProfile); renderFeed(); }
+        }
+        function addComment(id) {
+            let input = document.getElementById(`commentInput-${id}`); let text = input.value.trim(); if(!text) return;
+            let post = communityPosts.find(p => p.id === id); if(post) { if(!post.comments) post.comments = []; post.comments.push({ author: socialProfile.name, text: text }); NetAPI.save(KEYS.posts, communityPosts); renderFeed(); }
+        }
+
+        // ================= 系統與主題初始化 =================
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark'); const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙'; document.getElementById('darkModeToggle').checked = isDark; NetAPI.save(KEYS.theme, isDark ? 'dark' : 'light');
+        }
+
+        window.onload = () => {
+            const savedTheme = NetAPI.load(KEYS.theme);
+            if(savedTheme === 'dark') { document.documentElement.classList.add('dark'); document.getElementById('themeBtn').innerText = '☀️'; if(document.getElementById('darkModeToggle')) document.getElementById('darkModeToggle').checked = true; }
+            document.getElementById('uW').value = user.w || ''; document.getElementById('uTargetW').value = user.targetW || ''; document.getElementById('uH').value = user.h || ''; document.getElementById('uA').value = user.a || ''; document.getElementById('uGender').value = user.gender || 'male'; document.getElementById('uAct').value = user.act || '1.2';
+            
+            setLang(currentLang); 
+            
+            // 強制初始化渲染，避免切換分頁前畫面為空
+            renderUserStats();
+            renderWater();
+            renderLogs();
+            renderGym();
+            renderSavedRecipes();
+            renderHistoryCalendar();
+            renderProfile();
+            renderFeed();
+            
+            setTimeout(initCharts, 150);
+        };
     </script>
 </body>
 </html>
