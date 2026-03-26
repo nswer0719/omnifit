@@ -1,31 +1,27 @@
 const i18nDict = {
     zh: {
         nav_diet: "飲食", nav_gym: "訓練", nav_comm: "社群", nav_user: "用戶", nav_settings: "設定",
-        nav_today: "今日", nav_7day: "7日規劃", nav_recipe: "食譜庫", nav_today_train: "今日訓練", nav_7day_train: "7日課表", nav_history: "歷史紀錄",
-        water_title: "飲水 💧", add_diet: "🍽️ 新增飲食", meal_breakfast: "🌅 早餐", meal_lunch: "☀️ 午餐", meal_dinner: "🌙 晚餐", meal_snack: "🍏 點心",
+        nav_today: "今日清單", nav_7day: "7日規劃", nav_recipe: "食譜庫", nav_today_train: "今日訓練", nav_7day_train: "7日課表", nav_history: "歷史紀錄",
+        water_title: "飲水 💧", add_diet: "🍽️ 新增飲食", meal_breakfast: "🌅 早餐時段", meal_lunch: "☀️ 午餐時段", meal_dinner: "🌙 晚餐時段", meal_snack: "🍏 點心與其他",
         btn_save_record: "儲存紀錄", daily_plan_total: "當日規劃總額", edit_plan: "📅 編排", btn_add_list: "加入清單", qty: "份量 / Qty",
-        create_recipe: "🥑 建立食譜組合", selected_ingredients: "已選食材", btn_save_recipe: "封裝食譜",
-        vol_trend: "近 7 日容量趨勢", workout_log: "🏋️‍♂️ 訓練日誌", strength: "重量訓練", cardio: "有氧運動", weight_kg: "重量(KG)", sets: "組數", reps: "次數", time_mins: "時間(Mins)", distance_km: "距離(KM)", today_list: "今日清單",
-        history_query: "📜 歷史紀錄查詢", comm_feed: "動態牆", search_comm: "🔍 搜尋用戶或內容...", my_post: "發佈動態", comm_profile: "個人主頁", comm_desc: "分享您的努力，激勵更多人！", post_type: "貼文類型", upload_media: "點擊上傳相片或短片", btn_publish: "發佈至動態牆", post_placeholder: "今天練得如何？寫下一些心得紀錄吧...", 
-        type_diet: "🍱 美味飲食分享", type_training: "💪 訓練動作紀錄", type_physique: "👤 體態轉變", comment_placeholder: "留言...", btn_comment: "發佈", stats_posts: "貼文", stats_followers: "粉絲", stats_following: "追蹤中", my_works: "我的作品與分享",
-        user_core: "個人數據核心", curr_weight: "目前體重 (KG)", target_weight: "目標體重 (KG)", gender: "性別", age: "年齡", height: "身高 (CM)", pal: "活動量", btn_sync_data: "同步運算核心數據", ai_target: "AI 建議攝取目標", weight_chart: "體重軌跡", calorie_trend: "熱量攝取趨勢", label_tdee: "維持 TDEE", label_bmi: "身體質量 BMI", label_target_dist: "距目標",
-        pal_1_2: "💻 久坐 (辦公族、幾乎不運動)", pal_1_375: "🚶 輕度 (每週輕鬆活動 1-3 天)", pal_1_465: "🏃 中輕度 (每週規律健身 3-4 天)", pal_1_55: "🏃 中度 (每週規律訓練 5-6 天)", pal_1_725: "🏋️ 高度 (每日重訓或勞動力)", pal_1_9: "🔥 極高 (專業運動員、長期競技)", male: "男", female: "女", range_7: "7天", range_30: "30天", range_all: "全部",
-        sys_settings: "系統設定", lang_setting: "介面語言 / Language", health_sync: "連接 Apple Health / Fit", health_sync_desc: "自動同步步數與體重", dark_mode: "深色模式", calculating: "計算中...", rest_timer: "休息: 00:00", select_date_cal: "請選擇日曆上的日期",
-        legal_support: "法律與支援", privacy_policy: "隱私政策", tos: "服務條款", health_disclaimer: "健康免責聲明", content_mod: "社群內容審核聲明", permissions: "權限導覽", contact_support: "聯繫支援 / 意見回饋", version: "Version 1.0.0 (Build 26)", report_post: "檢舉貼文", block_user: "封鎖用戶"
+        create_recipe: "🥑 建立食譜組合", selected_ingredients: "已選食材清單", btn_save_recipe: "封裝食譜",
+        vol_trend: "近 7 日容量趨勢", workout_log: "🏋️‍♂️ 訓練日誌", strength: "重量訓練", cardio: "有氧運動", weight_kg: "重量 (KG)", sets: "組數", reps: "次數", time_mins: "時間 (分鐘)", distance_km: "距離 (KM)", today_list: "今日清單",
+        history_query: "📜 歷史紀錄查詢", comm_feed: "動態牆", search_comm: "🔍 搜尋用戶或內容...", my_post: "發佈新動態", comm_desc: "分享您的努力，激勵更多人！", post_type: "貼文類型", upload_media: "點擊上傳相片或短片", btn_publish: "發佈至動態牆", post_placeholder: "今天練得如何？寫下一些心得紀錄吧...",
+        user_core: "個人數據核心", curr_weight: "目前體重 (KG)", target_weight: "目標體重 (KG)", gender: "性別", age: "年齡", height: "身高 (CM)", pal: "活動量係數 (PAL)", btn_sync_data: "同步運算核心數據", ai_target: "AI 建議攝取目標", weight_chart: "體重軌跡", calorie_trend: "熱量攝取趨勢", label_tdee: "維持 TDEE", label_bmi: "身體質量 BMI", label_target_dist: "距目標體重",
+        pal_1_2: "💻 1.2 久坐 (辦公族、幾乎不運動)", pal_1_375: "🚶 1.375 輕度 (每週輕鬆活動 1-3 天)", pal_1_465: "🏃 1.465 中輕度 (每週規律健身 3-4 天)", pal_1_55: "🏃 1.55 中度 (每週規律訓練 5-6 天)", pal_1_725: "🏋️ 1.725 高度 (每日重訓或勞動力工作)", pal_1_9: "🔥 1.9 極高 (專業運動員、長期競技)", male: "男", female: "女", range_7: "7天", range_30: "30天", range_all: "全部",
+        sys_settings: "系統設定", lang_setting: "介面語言 / Language", health_sync: "連接 Apple Health / Fit", health_sync_desc: "自動同步步數與體重", dark_mode: "深色模式", calculating: "計算中...", rest_timer: "休息: 00:00", select_date_cal: "請選擇日曆上的日期"
     },
     en: {
-        nav_diet: "Diet", nav_gym: "Gym", nav_comm: "Social", nav_user: "User", nav_settings: "Set",
-        nav_today: "Today", nav_7day: "Planner", nav_recipe: "Recipes", nav_today_train: "Workout", nav_7day_train: "Planner", nav_history: "History",
+        nav_diet: "Diet", nav_gym: "Gym", nav_comm: "Social", nav_user: "User", nav_settings: "Settings",
+        nav_today: "Today", nav_7day: "7-Day Plan", nav_recipe: "Recipes", nav_today_train: "Workout", nav_7day_train: "Planner", nav_history: "History",
         water_title: "Water 💧", add_diet: "🍽️ Add Meal", meal_breakfast: "🌅 Breakfast", meal_lunch: "☀️ Lunch", meal_dinner: "🌙 Dinner", meal_snack: "🍏 Snack",
-        btn_save_record: "Save Record", daily_plan_total: "Daily Plan Total", edit_plan: "📅 Plan", btn_add_list: "Add to List", qty: "Qty",
-        create_recipe: "🥑 Create Recipe", selected_ingredients: "Selected", btn_save_recipe: "Save Recipe",
-        vol_trend: "7-Day Volume Trend", workout_log: "🏋️‍♂️ Workout Log", strength: "Strength", cardio: "Cardio", weight_kg: "Weight(KG)", sets: "Sets", reps: "Reps", time_mins: "Time(Mins)", distance_km: "Distance(KM)", today_list: "Today's List",
-        history_query: "📜 History", comm_feed: "Feed", search_comm: "🔍 Search users or posts...", my_post: "Create Post", comm_profile: "Profile", comm_desc: "Share your progress!", post_type: "Post Type", upload_media: "Upload Photo/Video", btn_publish: "Publish to Feed", post_placeholder: "How was your workout today? Write a log...",
-        type_diet: "🍱 Diet Share", type_training: "💪 Training Log", type_physique: "👤 Physique Update", comment_placeholder: "Add a comment...", btn_comment: "Post", stats_posts: "Posts", stats_followers: "Followers", stats_following: "Following", my_works: "My Posts & Media",
-        user_core: "Core Data", curr_weight: "Current Wt (KG)", target_weight: "Target Wt (KG)", gender: "Gender", age: "Age", height: "Height (CM)", pal: "Activity Level", btn_sync_data: "Sync Core Data", ai_target: "AI Calorie Goal", weight_chart: "Weight Tracker", calorie_trend: "Calorie Trend", label_tdee: "Maint. TDEE", label_bmi: "Body Mass BMI", label_target_dist: "To Target",
-        pal_1_2: "💻 Sedentary (Office job)", pal_1_375: "🚶 Light (Exercise 1-3 days/wk)", pal_1_465: "🏃 Mod-Light (3-4 days/wk)", pal_1_55: "🏃 Moderate (5-6 days/wk)", pal_1_725: "🏋️ Heavy (Daily hard training/labor)", pal_1_9: "🔥 Extreme (Pro athlete)", male: "Male", female: "Female", range_7: "7 Days", range_30: "30 Days", range_all: "All",
-        sys_settings: "System Settings", lang_setting: "Language", health_sync: "Connect Health/Fit", health_sync_desc: "Auto-sync steps & weight", dark_mode: "Dark Mode", calculating: "Calc...", rest_timer: "Rest: 00:00", select_date_cal: "Please select a date",
-        legal_support: "Legal & Support", privacy_policy: "Privacy Policy", tos: "Terms of Service", health_disclaimer: "Health Disclaimer", content_mod: "Content Moderation", permissions: "Permissions", contact_support: "Contact Support / Feedback", version: "Version 1.0.0 (Build 26)", report_post: "Report Post", block_user: "Block User"
+        btn_save_record: "Save Record", daily_plan_total: "Daily Plan Total", edit_plan: "📅 Plan", btn_add_list: "Add to List", qty: "Quantity",
+        create_recipe: "🥑 Create Recipe", selected_ingredients: "Selected Ingredients", btn_save_recipe: "Save Recipe",
+        vol_trend: "7-Day Volume Trend", workout_log: "🏋️‍♂️ Workout Log", strength: "Strength", cardio: "Cardio", weight_kg: "Weight (KG)", sets: "Sets", reps: "Reps", time_mins: "Time (Mins)", distance_km: "Distance (KM)", today_list: "Today's List",
+        history_query: "📜 History Query", comm_feed: "Feed", search_comm: "🔍 Search users or posts...", my_post: "Create Post", comm_desc: "Share and inspire others!", post_type: "Post Type", upload_media: "Upload Photo/Video", btn_publish: "Publish to Feed", post_placeholder: "How was your workout today? Write a log...",
+        user_core: "Core Data", curr_weight: "Current Weight (KG)", target_weight: "Target Weight (KG)", gender: "Gender", age: "Age", height: "Height (CM)", pal: "Activity Level (PAL)", btn_sync_data: "Sync Core Data", ai_target: "AI Calorie Goal", weight_chart: "Weight Tracker", calorie_trend: "Calorie Trend", label_tdee: "Maint. TDEE", label_bmi: "Body Mass BMI", label_target_dist: "To Target",
+        pal_1_2: "💻 1.2 Sedentary (Office job)", pal_1_375: "🚶 1.375 Light (Exercise 1-3 days/wk)", pal_1_465: "🏃 1.465 Moderate-Light (3-4 days/wk)", pal_1_55: "🏃 1.55 Moderate (5-6 days/wk)", pal_1_725: "🏋️ 1.725 Heavy (Daily hard training/labor)", pal_1_9: "🔥 1.9 Extreme (Pro athlete)", male: "Male", female: "Female", range_7: "7 Days", range_30: "30 Days", range_all: "All",
+        sys_settings: "System Settings", lang_setting: "Language", health_sync: "Connect Health/Fit", health_sync_desc: "Auto-sync steps & weight", dark_mode: "Dark Mode", calculating: "Calculating...", rest_timer: "Rest: 00:00", select_date_cal: "Please select a date on calendar"
     }
 };
 
