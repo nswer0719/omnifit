@@ -6,8 +6,8 @@ const Storage = {
 };
 
 const i18n = {
-    en: { today: 'Today', '7dayPlan': '7-Day Plan', customFood: 'Custom Food', history: 'History', water: 'Water', goal: 'Goal', current: 'Current', searchFood: 'Search food...', save: 'Save Data', bodyStats: 'Body Stats', settings: 'Settings', language: 'Language', theme: 'Dark Mode', healthSync: 'Sync Health App', navDiet: 'Diet', navWorkout: 'Workout', navSocial: 'Social', navUser: 'User', navSettings: 'Settings', stop: 'Stop', cardio: 'Cardio', strength: 'Strength', add: 'Add Record', act1: 'Sedentary', act2: 'Light Activity', act3: 'Moderate', act4: 'Active', act5: 'Extra Active' },
-    zh: { today: '今日', '7dayPlan': '七日規劃', customFood: '自訂食譜', history: '歷史紀錄', water: '今日飲水', goal: '目標熱量', current: '目前攝取', searchFood: '搜尋食物...', save: '儲存數據', bodyStats: '身體數據', settings: '系統設定', language: '介面語言', theme: '深色模式', healthSync: '連接健康 App', navDiet: '飲食', navWorkout: '訓練', navSocial: '社群', navUser: '用戶', navSettings: '設定', stop: '停止', cardio: '有氧運動', strength: '無氧運動', add: '新增紀錄', act1: '久坐 (辦公室)', act2: '輕度活動', act3: '中度活動 (一週3-5次)', act4: '高度活動 (一週6-7次)', act5: '極度活動 (運動員)' }
+    en: { goal: 'Goal Kcal', current: 'Current', searchFood: 'Search food...', add: 'Add', water: 'Water', dietList: 'Diet Log', workoutList: 'Workout Plan', customFood: 'Custom Recipe', save: 'Save Data', settings: 'Settings', language: 'Language', theme: 'Dark Mode', healthSync: 'Sync Health App', navDiet: 'Diet', navWorkout: 'Workout', navCustom: 'Recipe', navUser: 'User', stop: 'Stop', cardio: 'Cardio', strength: 'Strength' },
+    zh: { goal: '目標熱量', current: '目前攝取', searchFood: '搜尋食物或食譜...', add: '新增', water: '今日飲水', dietList: '餐單紀錄', workoutList: '訓練課表', customFood: '自訂食譜庫', save: '更新身體數據', settings: '系統偏好', language: '介面語言', theme: '深色模式', healthSync: '連接健康 App', navDiet: '飲食', navWorkout: '訓練', navCustom: '食譜', navUser: '設定', stop: '停止', cardio: '有氧運動', strength: '無氧運動' }
 };
 
 const App = {
@@ -19,9 +19,10 @@ const App = {
         water: Storage.load('water') || {},
         lang: Storage.load('lang') || 'zh',
         healthSync: Storage.load('healthSync') || false,
-        currentDate: new Date().toISOString().split('T')[0],
+        currentDate: new Date().toISOString().split('T')[0], // 統一控制所有分頁的日期
         workoutMode: 'cardio',
-        timerWorker: null
+        timerWorker: null,
+        tempFoodId: null // 暫存準備新增的食物ID
     },
 
     init() {
@@ -29,81 +30,59 @@ const App = {
         this.bindEvents();
         this.renderDateSelector();
         this.updateUserStats();
-        this.renderMeal();
-        this.renderWorkout();
+        this.renderDataForDate(); // 根據選擇的日期渲染
         this.initTimer();
-        this.updateWaterUI();
-        
-        if (Storage.load('theme') === 'dark') document.documentElement.classList.add('dark');
         this.updateHealthToggleUI();
+        if (Storage.load('theme') === 'dark') document.documentElement.classList.add('dark');
     },
 
     bindEvents() {
-        // 分頁與小分頁
+        // 主導航切換
         window.switchTab = (id) => {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active', 'hidden'));
             document.querySelectorAll('.tab-content').forEach(el => el.id === `tab-${id}` ? el.classList.add('active') : el.classList.add('hidden'));
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 const isActive = btn.dataset.target === `tab-${id}`;
                 btn.classList.toggle('text-indigo-600', isActive);
+                btn.classList.toggle('dark:text-indigo-400', isActive);
                 btn.classList.toggle('opacity-40', !isActive);
             });
         };
 
-        window.switchSubTab = (tab, sub) => {
-            document.querySelectorAll(`#tab-${tab} .sub-tab-content`).forEach(el => el.classList.remove('block', 'hidden'));
-            document.querySelectorAll(`#tab-${tab} .sub-tab-content`).forEach(el => el.id === `${tab}-${sub}` ? el.classList.add('block') : el.classList.add('hidden'));
-            document.querySelectorAll(`#tab-${tab} .sub-tab-btn`).forEach(btn => {
-                const isActive = btn.dataset.target === `${tab}-${sub}`;
-                btn.classList.toggle('bg-white', isActive);
-                btn.classList.toggle('dark:bg-slate-700', isActive);
-                btn.classList.toggle('text-slate-500', !isActive);
-                btn.classList.toggle('shadow-sm', isActive);
-            });
-        };
-
-        // 用戶數據儲存
+        // 用戶設定更新
         document.getElementById('saveUserBtn').addEventListener('click', () => {
             this.state.user = {
-                weight: parseFloat(document.getElementById('setWeight').value),
-                targetW: parseFloat(document.getElementById('setTargetW').value),
-                height: parseFloat(document.getElementById('setHeight').value),
-                age: parseFloat(document.getElementById('setAge').value),
+                weight: parseFloat(document.getElementById('setWeight').value) || 0,
+                targetW: parseFloat(document.getElementById('setTargetW').value) || 0,
+                height: parseFloat(document.getElementById('setHeight').value) || 0,
+                age: parseFloat(document.getElementById('setAge').value) || 0,
                 gender: document.getElementById('setGender').value,
-                activity: parseFloat(document.getElementById('setActivity').value)
+                activity: parseFloat(document.getElementById('setActivity').value) || 1.2
             };
             Storage.save('user', this.state.user);
             this.updateUserStats();
             alert(this.state.lang === 'zh' ? "數據已更新！" : "Stats Updated!");
         });
 
-        // 載入表單
         const u = this.state.user;
         ['Weight', 'TargetW', 'Height', 'Age'].forEach(k => document.getElementById(`set${k}`).value = u[k.toLowerCase()] || '');
         if(u.gender) document.getElementById('setGender').value = u.gender;
         if(u.activity) document.getElementById('setActivity').value = u.activity;
 
-        // 設定：語言、主題、健康App
+        // 設定切換
         document.getElementById('langSelect').value = this.state.lang;
         document.getElementById('langSelect').addEventListener('change', (e) => {
-            this.state.lang = e.target.value;
-            Storage.save('lang', this.state.lang);
-            this.applyLang();
+            this.state.lang = e.target.value; Storage.save('lang', this.state.lang); this.applyLang();
         });
-
         document.getElementById('toggleThemeBtn').addEventListener('click', () => {
             const isDark = document.documentElement.classList.toggle('dark');
             Storage.save('theme', isDark ? 'dark' : 'light');
         });
-
         document.getElementById('toggleHealthBtn').addEventListener('click', () => {
-            this.state.healthSync = !this.state.healthSync;
-            Storage.save('healthSync', this.state.healthSync);
-            this.updateHealthToggleUI();
-            if(this.state.healthSync) alert(this.state.lang === 'zh' ? "準備連接 Apple Health / Google Fit API..." : "Preparing API connection...");
+            this.state.healthSync = !this.state.healthSync; Storage.save('healthSync', this.state.healthSync); this.updateHealthToggleUI();
         });
 
-        // 食物搜尋
+        // 搜尋監聽
         document.getElementById('foodSearch').addEventListener('input', e => this.searchFood(e.target.value));
     },
 
@@ -116,13 +95,8 @@ const App = {
     updateHealthToggleUI() {
         const btn = document.getElementById('toggleHealthBtn');
         const knob = document.getElementById('healthKnob');
-        if(this.state.healthSync) {
-            btn.classList.replace('bg-slate-200', 'bg-green-500');
-            knob.classList.add('translate-x-6');
-        } else {
-            btn.classList.replace('bg-green-500', 'bg-slate-200');
-            knob.classList.remove('translate-x-6');
-        }
+        if(this.state.healthSync) { btn.classList.replace('bg-slate-200', 'bg-green-500'); knob.classList.add('translate-x-6'); } 
+        else { btn.classList.replace('bg-green-500', 'bg-slate-200'); knob.classList.remove('translate-x-6'); }
     },
 
     updateUserStats() {
@@ -135,58 +109,50 @@ const App = {
         
         let targetCal = tdee;
         let advice = this.state.lang === 'zh' ? "維持現狀" : "Maintain";
-        if (u.targetW < u.weight) { targetCal = tdee - 300; advice = this.state.lang === 'zh' ? "產生熱量赤字 (減脂)" : "Caloric Deficit (Cut)"; }
-        else if (u.targetW > u.weight) { targetCal = tdee + 300; advice = this.state.lang === 'zh' ? "產生熱量盈餘 (增肌)" : "Caloric Surplus (Bulk)"; }
+        if (u.targetW < u.weight) { targetCal = tdee - 300; advice = this.state.lang === 'zh' ? "熱量赤字 (減脂)" : "Deficit (Cut)"; }
+        else if (u.targetW > u.weight) { targetCal = tdee + 300; advice = this.state.lang === 'zh' ? "熱量盈餘 (增肌)" : "Surplus (Bulk)"; }
 
         document.getElementById('userBmi').innerText = bmi.toFixed(1);
         document.getElementById('userTdee').innerText = tdee;
-        document.getElementById('userGoalCal').innerText = targetCal + " kcal";
-        document.getElementById('dietGoalKcal').innerText = targetCal;
+        document.getElementById('dietGoalKcal').innerText = targetCal + " kcal";
         document.getElementById('calorieAdvice').innerText = advice;
     },
 
-    // ======== 飲食 & 飲水 ========
+    // ======== 統一日期選擇邏輯 (取代繁瑣的分頁) ========
     renderDateSelector() {
         const sel = document.getElementById('dateSelector');
         let html = '';
         for(let i=0; i<7; i++) {
             let d = new Date(); d.setDate(d.getDate() + i);
             const dStr = d.toISOString().split('T')[0];
-            const display = i === 0 ? (this.state.lang === 'zh'?'今日':'Today') : `${d.getMonth()+1}/${d.getDate()}`;
-            html += `<button onclick="window.selectDate('${dStr}')" class="px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap ${i===0 ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800'}">${display}</button>`;
+            const isToday = i === 0;
+            const display = isToday ? (this.state.lang==='zh'?'今日':'Today') : `${d.getMonth()+1}/${d.getDate()}`;
+            const activeClass = dStr === this.state.currentDate ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-slate-800 text-slate-500';
+            html += `<button onclick="window.selectDate('${dStr}')" class="px-5 py-2.5 rounded-2xl text-sm font-extrabold whitespace-nowrap transition-all flex-shrink-0 ${activeClass}">${display}</button>`;
         }
         sel.innerHTML = html;
+        document.getElementById('headerDateDisplay').innerText = this.state.currentDate;
     },
 
+    renderDataForDate() {
+        this.renderMeal();
+        this.renderWorkout();
+        this.updateWaterUI();
+    },
+
+    // ======== 飲食系統 (內嵌式新增) ========
     searchFood(q) {
         const drop = document.getElementById('searchDropdown');
         if(!q) { drop.classList.add('hidden'); return; }
         const allFood = [...FoodDatabase, ...this.state.customFoods];
-        const res = allFood.filter(f => f.name.includes(q)).slice(0, 30);
+        const res = allFood.filter(f => f.name.includes(q)).slice(0, 15);
         drop.innerHTML = res.map(f => `
-            <div class="p-4 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer flex justify-between" onclick="window.addFood('${f.id}')">
+            <div class="p-4 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center border-b border-slate-100 dark:border-slate-700 last:border-0" onclick="window.prepareAddFood('${f.id}')">
                 <span class="font-bold text-sm">${f.name}</span>
-                <div class="text-[10px] font-bold flex gap-2">
-                    <span class="text-indigo-500">${f.kcal}k</span>
-                    <span class="text-blue-500">${f.protein||0}p</span>
-                </div>
+                <span class="text-xs font-bold bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded">${f.kcal} kcal</span>
             </div>
         `).join('');
         drop.classList.remove('hidden');
-    },
-
-    addFood(id) {
-        const allFood = [...FoodDatabase, ...this.state.customFoods];
-        const food = allFood.find(f => f.id === id);
-        const amount = prompt(this.state.lang === 'zh' ? `輸入份量 (${food.unit}):` : `Amount (${food.unit}):`, "1");
-        if(!amount || isNaN(amount)) return;
-
-        if(!this.state.meals[this.state.currentDate]) this.state.meals[this.state.currentDate] = [];
-        this.state.meals[this.state.currentDate].push({ ...food, amount: parseFloat(amount) });
-        Storage.save('meals', this.state.meals);
-        this.renderMeal();
-        document.getElementById('foodSearch').value = '';
-        document.getElementById('searchDropdown').classList.add('hidden');
     },
 
     renderMeal() {
@@ -199,24 +165,23 @@ const App = {
             const c = Math.round((item.carbs||0) * item.amount);
             total += k;
             return `
-                <div class="bg-white/60 dark:bg-slate-900/40 p-4 rounded-2xl border dark:border-slate-800 flex justify-between items-center">
+                <div class="glass-card p-4 rounded-2xl flex justify-between items-center">
                     <div>
-                        <p class="font-bold text-sm">${item.name} <span class="text-[10px] opacity-50 ml-1">${item.amount}${item.unit}</span></p>
-                        <div class="text-[10px] font-bold mt-1 flex gap-3">
+                        <p class="font-bold text-sm">${item.name} <span class="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-1">${item.amount}${item.unit}</span></p>
+                        <div class="text-[10px] font-extrabold mt-1.5 flex gap-3">
                             <span class="text-blue-500">PRO ${p}g</span>
                             <span class="text-amber-500">FAT ${f}g</span>
                             <span class="text-emerald-500">CARB ${c}g</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="font-black text-indigo-600 text-lg">${k}</span>
-                        <button onclick="window.removeFood(${idx})" class="w-6 h-6 bg-red-50 dark:bg-red-900/30 text-red-500 rounded-full text-xs">✕</button>
+                    <div class="flex items-center gap-4">
+                        <span class="font-black text-indigo-600 dark:text-indigo-400 text-lg">${k}</span>
+                        <button onclick="window.removeFood(${idx})" class="w-8 h-8 flex items-center justify-center bg-red-50 dark:bg-red-900/30 text-red-500 rounded-full text-xs font-bold">✕</button>
                     </div>
                 </div>`;
         }).join('');
         
-        document.getElementById('mealList').innerHTML = html;
-        document.getElementById('planMealList').innerHTML = html; // 復用渲染
+        document.getElementById('mealList').innerHTML = html || `<p class="text-sm opacity-50 text-center py-4 font-bold">尚無紀錄</p>`;
         document.getElementById('mealTotalKcal').innerText = total;
     },
 
@@ -225,23 +190,21 @@ const App = {
         document.getElementById('waterTotal').innerText = todayWater;
     },
 
-    // ======== 訓練 ========
+    // ======== 訓練系統 ========
     renderWorkout() {
         const list = this.state.workouts[this.state.currentDate] || [];
         const html = list.map((w, idx) => `
-            <div class="bg-white/60 dark:bg-slate-900/40 p-4 rounded-2xl border dark:border-slate-800 flex justify-between items-center">
+            <div class="glass-card p-4 rounded-2xl flex justify-between items-center">
                 <div>
-                    <p class="font-bold text-sm">${w.name} <span class="text-[10px] px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 ml-2 uppercase">${w.type}</span></p>
-                    <p class="text-[10px] font-bold mt-1 opacity-70">${w.type === 'cardio' ? `${w.dist}km / ${w.time}min` : `${w.weight}kg x ${w.sets}sets x ${w.reps}reps`}</p>
+                    <p class="font-bold text-sm">${w.name} <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 ml-2 uppercase font-black tracking-wider text-slate-500">${w.type}</span></p>
+                    <p class="text-[11px] font-bold mt-1 text-slate-500">${w.type === 'cardio' ? `距離: ${w.dist}km / 時間: ${w.time}min` : `重量: ${w.weight}kg / ${w.sets}組 x ${w.reps}下`}</p>
                 </div>
-                <button onclick="window.removeWorkout(${idx})" class="w-6 h-6 bg-red-50 text-red-500 rounded-full text-xs">✕</button>
+                <button onclick="window.removeWorkout(${idx})" class="w-8 h-8 flex items-center justify-center bg-red-50 dark:bg-red-900/30 text-red-500 rounded-full text-xs font-bold">✕</button>
             </div>
         `).join('');
-        document.getElementById('todayWorkoutList').innerHTML = html;
-        document.getElementById('historyWorkoutList').innerHTML = html;
+        document.getElementById('workoutList').innerHTML = html || `<p class="text-sm opacity-50 text-center py-4 font-bold">尚無排定訓練</p>`;
     },
 
-    // ======== 背景計時器 ========
     initTimer() {
         if (window.Worker) {
             this.state.timerWorker = new Worker('js/worker.js');
@@ -253,63 +216,102 @@ const App = {
                 } else if (e.data.status === 'done') {
                     document.getElementById('timerDisplay').innerText = "00:00";
                     if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
-                    alert(this.state.lang === 'zh' ? "訓練計時結束！" : "Timer Finished!");
                 }
             };
         }
     }
 };
 
-// 全局暴露供 HTML 呼叫
-window.selectDate = (d) => { App.state.currentDate = d; App.renderMeal(); App.renderWorkout(); alert(App.state.lang === 'zh' ? `已切換至 ${d}` : `Switched to ${d}`); };
-window.addFood = (id) => App.addFood(id);
+// ================= 全局視窗函數 =================
+
+// 日期切換 (核心)
+window.selectDate = (d) => { 
+    App.state.currentDate = d; 
+    App.renderDateSelector(); 
+    App.renderDataForDate(); 
+};
+
+// 內嵌式食物新增
+window.prepareAddFood = (id) => {
+    App.state.tempFoodId = id;
+    const allFood = [...FoodDatabase, ...App.state.customFoods];
+    const food = allFood.find(f => f.id === id);
+    document.getElementById('foodSearch').value = '';
+    document.getElementById('searchDropdown').classList.add('hidden');
+    document.getElementById('inlineFoodAdder').classList.remove('hidden');
+    document.getElementById('addFoodName').innerText = food.name;
+    document.getElementById('addFoodUnit').innerText = food.unit;
+    document.getElementById('addFoodAmount').value = '';
+    document.getElementById('addFoodAmount').focus();
+};
+
+window.cancelAddFood = () => {
+    App.state.tempFoodId = null;
+    document.getElementById('inlineFoodAdder').classList.add('hidden');
+};
+
+window.confirmAddFood = () => {
+    const amount = parseFloat(document.getElementById('addFoodAmount').value);
+    if(!amount || isNaN(amount)) return;
+    const allFood = [...FoodDatabase, ...App.state.customFoods];
+    const food = allFood.find(f => f.id === App.state.tempFoodId);
+    
+    if(!App.state.meals[App.state.currentDate]) App.state.meals[App.state.currentDate] = [];
+    App.state.meals[App.state.currentDate].push({ ...food, amount: amount });
+    Storage.save('meals', App.state.meals);
+    
+    App.renderMeal();
+    window.cancelAddFood();
+};
+
 window.removeFood = (idx) => { App.state.meals[App.state.currentDate].splice(idx, 1); Storage.save('meals', App.state.meals); App.renderMeal(); };
 
-// 自定義食物
+// 飲水
+window.addWater = (amt) => {
+    if(!App.state.water[App.state.currentDate]) App.state.water[App.state.currentDate] = 0;
+    App.state.water[App.state.currentDate] += amt; Storage.save('water', App.state.water); App.updateWaterUI();
+};
+
+// 自訂食物
 window.saveCustomFood = () => {
     const cf = {
         id: 'c_' + Date.now(),
         name: document.getElementById('cFoodName').value,
-        kcal: parseFloat(document.getElementById('cFoodKcal').value),
-        protein: parseFloat(document.getElementById('cFoodPro').value),
-        fat: parseFloat(document.getElementById('cFoodFat').value),
-        carbs: parseFloat(document.getElementById('cFoodCarb').value),
+        kcal: parseFloat(document.getElementById('cFoodKcal').value) || 0,
+        protein: parseFloat(document.getElementById('cFoodPro').value) || 0,
+        fat: parseFloat(document.getElementById('cFoodFat').value) || 0,
+        carbs: parseFloat(document.getElementById('cFoodCarb').value) || 0,
         unit: '100g'
     };
-    if(!cf.name || isNaN(cf.kcal)) return alert(App.state.lang === 'zh' ? '資料不全' : 'Missing Info');
+    if(!cf.name) return alert('請輸入食物名稱');
     App.state.customFoods.push(cf);
     Storage.save('customFoods', App.state.customFoods);
-    alert(App.state.lang === 'zh' ? '儲存成功！' : 'Saved!');
     ['cFoodName', 'cFoodKcal', 'cFoodPro', 'cFoodFat', 'cFoodCarb'].forEach(id => document.getElementById(id).value = '');
+    alert('已新增至自訂食譜庫！你現在可以在搜尋列找到它。');
 };
 
-// 飲水功能
-window.addWater = (amt) => {
-    if(!App.state.water[App.state.currentDate]) App.state.water[App.state.currentDate] = 0;
-    App.state.water[App.state.currentDate] += amt;
-    Storage.save('water', App.state.water);
-    App.updateWaterUI();
-};
-
-// 訓練新增邏輯
+// 訓練系統
 window.setWorkoutMode = (mode) => {
     App.state.workoutMode = mode;
     document.getElementById('btnCardio').classList.toggle('border-orange-200', mode === 'cardio');
     document.getElementById('btnStrength').classList.toggle('border-indigo-200', mode === 'strength');
     document.getElementById('cardioInputs').classList.toggle('hidden', mode !== 'cardio');
     document.getElementById('strengthInputs').classList.toggle('hidden', mode !== 'strength');
+    // 深色模式邊框處理
+    document.getElementById('btnCardio').classList.toggle('dark:border-orange-800', mode === 'cardio');
+    document.getElementById('btnStrength').classList.toggle('dark:border-indigo-800', mode === 'strength');
 };
 
 window.logWorkout = () => {
     const w = { id: 'w_' + Date.now(), name: document.getElementById('wName').value, type: App.state.workoutMode };
     if(!w.name) return;
     if(w.type === 'cardio') {
-        w.dist = document.getElementById('wDist').value;
-        w.time = document.getElementById('wTime').value;
+        w.dist = document.getElementById('wDist').value || 0;
+        w.time = document.getElementById('wTime').value || 0;
     } else {
-        w.weight = document.getElementById('wWeight').value;
-        w.sets = document.getElementById('wSets').value;
-        w.reps = document.getElementById('wReps').value;
+        w.weight = document.getElementById('wWeight').value || 0;
+        w.sets = document.getElementById('wSets').value || 0;
+        w.reps = document.getElementById('wReps').value || 0;
     }
     if(!App.state.workouts[App.state.currentDate]) App.state.workouts[App.state.currentDate] = [];
     App.state.workouts[App.state.currentDate].push(w);
@@ -320,13 +322,8 @@ window.logWorkout = () => {
 
 window.removeWorkout = (idx) => { App.state.workouts[App.state.currentDate].splice(idx, 1); Storage.save('workouts', App.state.workouts); App.renderWorkout(); };
 
-// 背景計時器控制
-window.startTimer = (seconds) => {
-    if (App.state.timerWorker) App.state.timerWorker.postMessage({ command: 'start', duration: seconds });
-};
-window.stopTimer = () => {
-    if (App.state.timerWorker) App.state.timerWorker.postMessage({ command: 'stop' });
-    document.getElementById('timerDisplay').innerText = "00:00";
-};
+// 計時器
+window.startTimer = (seconds) => { if (App.state.timerWorker) App.state.timerWorker.postMessage({ command: 'start', duration: seconds }); };
+window.stopTimer = () => { if (App.state.timerWorker) App.state.timerWorker.postMessage({ command: 'stop' }); document.getElementById('timerDisplay').innerText = "00:00"; };
 
 document.addEventListener('DOMContentLoaded', () => App.init());
