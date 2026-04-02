@@ -10,74 +10,34 @@
 <body>
     <div class="app-container">
         <header class="safe-area-header"></header>
+        
+        <div id="settings-btn" onclick="toggleSettingsModal()">⚙️</div>
 
         <main id="app-content">
             <section id="tab-user" class="tab-content active">
-                <h1 class="page-title">用戶數據系統</h1>
-                
+                <h1 class="page-title" style="margin-left: 30px;">用戶數據系統</h1>
                 <div class="card glass-effect">
-                    <div class="form-group">
-                        <label>性別</label>
-                        <select id="gender">
-                            <option value="male">男 (Male)</option>
-                            <option value="female">女 (Female)</option>
-                        </select>
+                    <div class="form-group"><label>性別</label><select id="gender"><option value="male">男</option><option value="female">女</option></select></div>
+                    <div class="grid-inputs">
+                        <div class="form-group"><label>年齡</label><input type="number" id="age" placeholder="25"></div>
+                        <div class="form-group"><label>身高 (cm)</label><input type="number" id="height" placeholder="175"></div>
                     </div>
                     <div class="grid-inputs">
-                        <div class="form-group">
-                            <label>年齡</label>
-                            <input type="number" id="age" placeholder="25">
-                        </div>
-                        <div class="form-group">
-                            <label>身高 (cm)</label>
-                            <input type="number" id="height" placeholder="175">
-                        </div>
+                        <div class="form-group"><label>目前體重 (kg)</label><input type="number" id="current-weight" placeholder="70"></div>
+                        <div class="form-group"><label>目標體重 (kg)</label><input type="number" id="target-weight" placeholder="65"></div>
                     </div>
-                    <div class="grid-inputs">
-                        <div class="form-group">
-                            <label>目前體重 (kg)</label>
-                            <input type="number" id="current-weight" placeholder="70">
-                        </div>
-                        <div class="form-group">
-                            <label>目標體重 (kg)</label>
-                            <input type="number" id="target-weight" placeholder="65">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>每週活動量</label>
-                        <select id="activity-level">
-                            <option value="1.2">久坐 (基本上不運動)</option>
-                            <option value="1.375">輕度活動 (每週運動 1-2 天)</option>
-                            <option value="1.55">中度活動 (每週運動 3-5 天)</option>
-                            <option value="1.725">高度活動 (每週運動 6-7 天)</option>
-                            <option value="1.9">極高活動 (高強度體力勞動)</option>
-                        </select>
-                    </div>
+                    <div class="form-group"><label>每週活動量</label><select id="activity-level"><option value="1.2">久坐</option><option value="1.375">輕度活動</option><option value="1.55">中度活動</option><option value="1.725">高度活動</option><option value="1.9">極高活動</option></select></div>
                     <button class="btn-primary" onclick="calculateTDEE()">更新並計算</button>
                 </div>
-
                 <div class="result-container grid-inputs">
-                    <div class="card result-card glass-effect">
-                        <span class="label">維持現狀 TDEE</span>
-                        <div class="value"><span id="tdee-current">0</span> <small>kcal</small></div>
-                    </div>
-                    <div class="card result-card target glass-effect">
-                        <span class="label">目標體重 TDEE</span>
-                        <div class="value"><span id="tdee-target">0</span> <small>kcal</small></div>
-                    </div>
+                    <div class="card result-card glass-effect"><span class="label">維持現狀 TDEE</span><div class="value"><span id="tdee-current">0</span> <small>kcal</small></div></div>
+                    <div class="card result-card target glass-effect"><span class="label">目標體重 TDEE</span><div class="value"><span id="tdee-target">0</span> <small>kcal</small></div></div>
                 </div>
-
-                <div class="card glass-effect chart-section">
-                    <h2 class="card-subtitle">最近 7 日體重趨勢</h2>
-                    <div class="chart-wrapper">
-                        <canvas id="weightChart"></canvas>
-                    </div>
-                </div>
+                <div class="card glass-effect chart-section"><h2 class="card-subtitle">最近 7 日體重趨勢</h2><div class="chart-wrapper"><canvas id="weightChart"></canvas></div></div>
             </section>
 
             <section id="tab-meals" class="tab-content">
-                <h1 class="page-title">飲食與規劃</h1>
-                
+                <h1 class="page-title" style="margin-left: 30px;">飲食與規劃</h1>
                 <div class="sub-tabs">
                     <div class="sub-tab-item active" onclick="switchMealContext('today', this)">今日餐單</div>
                     <div class="sub-tab-item" onclick="switchMealContext('plan', this)">7日規劃</div>
@@ -86,133 +46,72 @@
 
                 <div id="tracker-view">
                     <div id="plan-day-selector" class="form-group" style="display: none;">
-                        <label>選擇規劃天數</label>
-                        <select id="plan-day" onchange="updateFoodUI()">
-                            <option value="day1">第 1 天</option>
-                            <option value="day2">第 2 天</option>
-                            <option value="day3">第 3 天</option>
-                            <option value="day4">第 4 天</option>
-                            <option value="day5">第 5 天</option>
-                            <option value="day6">第 6 天</option>
-                            <option value="day7">第 7 天</option>
-                        </select>
+                        <label>選擇規劃天數</label><select id="plan-day" onchange="updateFoodUI()"></select>
                     </div>
-
                     <div class="card glass-effect dashboard-card">
-                        <div class="dashboard-header">
-                            <div class="dash-item">
-                                <span class="label">目標 TDEE</span>
-                                <div class="value target-text"><span id="dashboard-target-tdee">0</span> <small>kcal</small></div>
-                            </div>
-                            <div class="dash-item">
-                                <span class="label" id="dashboard-total-label">今日已攝取</span>
-                                <div class="value accent-text"><span id="total-calories">0</span> <small>kcal</small></div>
-                            </div>
-                        </div>
-                        <div class="macro-summary">
-                            <div class="macro-item"><span class="label">蛋白質</span> <div><span id="total-protein">0.0</span>g</div></div>
-                            <div class="macro-item"><span class="label">脂肪</span> <div><span id="total-fat">0.0</span>g</div></div>
-                            <div class="macro-item"><span class="label">碳水</span> <div><span id="total-carbs">0.0</span>g</div></div>
-                        </div>
+                        <div class="dashboard-header"><div class="dash-item"><span class="label">目標 TDEE</span><div class="value target-text"><span id="dashboard-target-tdee">0</span> <small>kcal</small></div></div><div class="dash-item"><span class="label" id="dashboard-total-label">今日已攝取</span><div class="value accent-text"><span id="total-calories">0</span> <small>kcal</small></div></div></div>
+                        <div class="macro-summary"><div class="macro-item"><span class="label">P</span> <span id="total-protein">0.0</span>g</div><div class="macro-item"><span class="label">F</span> <span id="total-fat">0.0</span>g</div><div class="macro-item"><span class="label">C</span> <span id="total-carbs">0.0</span>g</div></div>
                     </div>
-
                     <div class="card glass-effect" id="water-tracker-card">
-                        <div class="water-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                            <span style="font-weight:bold;">今日飲水量</span>
-                            <span class="value accent-text" style="font-size:20px; font-weight:800;"><span id="water-current">0</span> <small style="font-size:12px; color:#a0a0a0;">/ 2000 ml</small></span>
-                        </div>
-                        <div class="grid-inputs">
-                            <button class="btn-primary" style="background: rgba(255,255,255,0.1); box-shadow:none; margin-top:0;" onclick="updateWater(-250)">- 250ml</button>
-                            <button class="btn-primary" style="margin-top:0;" onclick="updateWater(250)">+ 250ml</button>
-                        </div>
+                        <div class="water-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><span style="font-weight:bold;">今日飲水量</span><span class="value accent-text" style="font-size:20px; font-weight:800;"><span id="water-current">0</span> <small style="font-size:12px; color:#a0a0a0;">/ 2000 ml</small></span></div>
+                        <div class="grid-inputs"><button class="btn-primary" style="background: rgba(255,255,255,0.1); box-shadow:none; margin-top:0;" onclick="updateWater(-250)">- 250ml</button><button class="btn-primary" style="margin-top:0;" onclick="updateWater(250)">+ 250ml</button></div>
                     </div>
 
                     <div class="card glass-effect">
-                        <h2 class="card-subtitle" id="form-subtitle">記錄新食物</h2>
+                        <h2 class="card-subtitle" id="form-subtitle">記錄新食物 (可自行填寫營養)</h2>
                         <div class="form-group autocomplete-wrapper">
-                            <label>搜尋食物資料庫</label>
-                            <input type="text" id="food-search" placeholder="例如：雞胸肉 或 蘋果" oninput="handleSearch(this.value)">
+                            <label>食物名稱 (搜尋或自訂)</label>
+                            <input type="text" id="food-search" placeholder="例如：雞胸肉 或 自訂食物" oninput="handleSearch(this.value)">
                             <div id="autocomplete-list" class="autocomplete-items"></div>
                         </div>
                         <div class="grid-inputs">
-                            <div class="form-group">
-                                <label>餐別</label>
-                                <select id="meal-type">
-                                    <option value="早餐">早餐</option>
-                                    <option value="午餐">午餐</option>
-                                    <option value="晚餐">晚餐</option>
-                                    <option value="小食/其他">小食/其他</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>份數</label>
-                                <input type="number" id="food-qty" placeholder="1" value="1" step="0.1" min="0.1" oninput="handleQuantityChange()">
-                            </div>
+                            <div class="form-group"><label>餐別</label><select id="meal-type"><option value="早餐">早餐</option><option value="午餐">午餐</option><option value="晚餐">晚餐</option><option value="小食/其他">小食/其他</option></select></div>
+                            <div class="form-group"><label>份數</label><input type="number" id="food-qty" placeholder="1" value="1" step="0.1" min="0.1" oninput="handleQuantityChange()"></div>
                         </div>
-                        <div style="display:none;"> <input type="number" id="food-calories"><input type="number" id="food-protein"><input type="number" id="food-fat"><input type="number" id="food-carbs">
+                        <div class="grid-inputs" id="manual-macros">
+                            <div class="form-group"><label>卡路里 (kcal)</label><input type="number" id="food-calories" placeholder="0"></div>
+                            <div class="form-group"><label>蛋白質 (g)</label><input type="number" id="food-protein" placeholder="0" step="0.1"></div>
+                            <div class="form-group"><label>脂肪 (g)</label><input type="number" id="food-fat" placeholder="0" step="0.1"></div>
+                            <div class="form-group"><label>碳水 (g)</label><input type="number" id="food-carbs" placeholder="0" step="0.1"></div>
                         </div>
                         <button class="btn-primary" onclick="addFoodRecord()">確認新增</button>
                     </div>
-
-                    <div class="card glass-effect">
-                        <h2 class="card-subtitle" id="list-subtitle">今日紀錄清單</h2>
-                        <div id="food-list-container" class="food-list"></div>
-                    </div>
+                    <div class="card glass-effect"><h2 class="card-subtitle" id="list-subtitle">今日紀錄清單</h2><div id="food-list-container" class="food-list"></div></div>
                 </div>
 
                 <div id="recipe-view" style="display: none;">
                     <div class="card glass-effect">
-                        <h2 class="card-subtitle">建立與搜尋食譜</h2>
-                        <div class="form-group">
-                            <label>自訂食譜名稱</label>
-                            <input type="text" id="recipe-name" placeholder="例如：我的增肌牛肉湯">
-                        </div>
+                        <h2 class="card-subtitle">建立食譜 (加入食材)</h2>
+                        <div class="form-group"><label>自訂食譜名稱</label><input type="text" id="recipe-name" placeholder="例如：我的增肌牛肉湯"></div>
                         <div class="form-group autocomplete-wrapper" style="margin-top: 15px;">
-                            <label>搜尋並加入食材</label>
-                            <input type="text" id="recipe-food-search" placeholder="搜尋食材..." oninput="handleRecipeSearch(this.value)">
+                            <label>食材名稱 (搜尋或自訂)</label>
+                            <input type="text" id="recipe-food-search" placeholder="搜尋食材或自訂..." oninput="handleRecipeSearch(this.value)">
                             <div id="recipe-autocomplete-list" class="autocomplete-items"></div>
                         </div>
-                        <div id="recipe-food-preview" style="font-size: 13px; color: var(--accent-color); margin-bottom: 10px; min-height: 20px;"></div>
-                        
+                        <div class="grid-inputs" id="recipe-manual-macros" style="margin-top: 10px;">
+                            <div class="form-group"><label>卡路里 (kcal)</label><input type="number" id="recipe-food-calories" placeholder="0"></div>
+                            <div class="form-group"><label>蛋白質 (g)</label><input type="number" id="recipe-food-protein" placeholder="0" step="0.1"></div>
+                            <div class="form-group"><label>脂肪 (g)</label><input type="number" id="recipe-food-fat" placeholder="0" step="0.1"></div>
+                            <div class="form-group"><label>碳水 (g)</label><input type="number" id="recipe-food-carbs" placeholder="0" step="0.1"></div>
+                        </div>
                         <div class="grid-inputs">
-                            <div class="form-group">
-                                <label>份數</label>
-                                <input type="number" id="recipe-food-qty" placeholder="1" value="1" step="0.1" min="0.1" oninput="updateRecipePreviewQty()">
-                            </div>
-                            <div class="form-group" style="display:flex; align-items:flex-end;">
-                                <button class="btn-primary" onclick="addRecipeIngredient()" style="margin-top:0;">加入清單</button>
-                            </div>
+                            <div class="form-group"><label>份數</label><input type="number" id="recipe-food-qty" placeholder="1" value="1" step="0.1" min="0.1" oninput="updateRecipePreviewQty()"></div>
+                            <div class="form-group" style="display:flex; align-items:flex-end;"><button class="btn-primary" onclick="addRecipeIngredient()" style="margin-top:0;">加入清單</button></div>
                         </div>
                     </div>
-
                     <div class="card glass-effect dashboard-card">
                         <h2 class="card-subtitle">食譜總營養</h2>
-                        <div class="dashboard-header" style="padding-bottom: 5px; border:none; margin-bottom: 5px;">
-                            <div class="dash-item">
-                                <span class="label">總卡路里</span>
-                                <div class="value accent-text"><span id="recipe-total-calories">0</span> <small>kcal</small></div>
-                            </div>
-                        </div>
-                        <div class="macro-summary" style="margin-bottom: 15px;">
-                            <div class="macro-item"><span class="label">蛋白質</span> <span id="recipe-total-protein">0.0</span>g</div>
-                            <div class="macro-item"><span class="label">脂肪</span> <span id="recipe-total-fat">0.0</span>g</div>
-                            <div class="macro-item"><span class="label">碳水</span> <span id="recipe-total-carbs">0.0</span>g</div>
-                        </div>
+                        <div class="dashboard-header" style="padding-bottom: 5px; border:none; margin-bottom: 5px;"><div class="dash-item"><span class="label">總卡路里</span><div class="value accent-text"><span id="recipe-total-calories">0</span> <small>kcal</small></div></div></div>
+                        <div class="macro-summary" style="margin-bottom: 15px;"><div class="macro-item"><span class="label">P</span> <span id="recipe-total-protein">0.0</span>g</div><div class="macro-item"><span class="label">F</span> <span id="recipe-total-fat">0.0</span>g</div><div class="macro-item"><span class="label">C</span> <span id="recipe-total-carbs">0.0</span>g</div></div>
                         <button class="btn-primary" onclick="saveRecipe()">儲存食譜</button>
                     </div>
-
-                    <div class="card glass-effect">
-                        <h2 class="card-subtitle">食譜食材草稿</h2>
-                        <div id="recipe-ingredients-list" class="food-list"></div>
-                    </div>
-
+                    <div class="card glass-effect"><h2 class="card-subtitle">食譜食材草稿</h2><div id="recipe-ingredients-list" class="food-list"></div></div>
                     <button class="btn-primary" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); box-shadow: none;" onclick="openRecipeModal()">我的食譜庫 (查看/刪除)</button>
                 </div>
             </section>
 
             <section id="tab-training" class="tab-content">
-                <h1 class="page-title">訓練與運動</h1>
-                
+                <h1 class="page-title" style="margin-left: 30px;">訓練與運動</h1>
                 <div class="sub-tabs">
                     <div class="sub-tab-item active" onclick="switchTrainingContext('today', this)">今日訓練</div>
                     <div class="sub-tab-item" onclick="switchTrainingContext('plan', this)">7日訓練</div>
@@ -221,121 +120,124 @@
 
                 <div id="training-tracker-view">
                     <div id="training-plan-selector" class="form-group" style="display: none;">
-                        <label>選擇訓練天數</label>
-                        <select id="training-plan-day" onchange="updateTrainingUI()">
-                            <option value="day1">第 1 天</option>
-                            <option value="day2">第 2 天</option>
-                            <option value="day3">第 3 天</option>
-                            <option value="day4">第 4 天</option>
-                            <option value="day5">第 5 天</option>
-                            <option value="day6">第 6 天</option>
-                            <option value="day7">第 7 天</option>
-                        </select>
+                        <label>選擇未來訓練日期</label>
+                        <select id="training-plan-day" onchange="updateTrainingUI()"></select>
                     </div>
 
-                    <div class="card glass-effect timer-card">
-                        <h2 class="card-subtitle">休息計時器</h2>
+                    <div class="card glass-effect timer-card" id="today-timer-card">
+                        <h2 class="card-subtitle">休息計時器 (支援背景通知)</h2>
                         <div id="timer-display" style="font-size: 36px; font-weight: 800; text-align: center; color: var(--accent-color); margin-bottom: 15px;">00:00</div>
                         <div class="grid-inputs">
-                            <input type="number" id="timer-seconds" placeholder="秒數 (例如: 60)">
+                            <input type="number" id="timer-seconds" placeholder="秒數 (例: 60)">
                             <button class="btn-primary" style="margin-top: 0;" onclick="startTimer()">開始計時</button>
                         </div>
                     </div>
 
                     <div class="card glass-effect">
                         <h2 class="card-subtitle" id="training-form-subtitle">新增訓練紀錄</h2>
-                        <div class="form-group">
-                            <label>訓練類型</label>
-                            <select id="training-type" onchange="toggleTrainingFields()">
-                                <option value="anaerobic">無氧訓練 (重量/組數/次數)</option>
-                                <option value="aerobic">有氧訓練 (時間/距離)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
+                        <div class="form-group"><label>訓練類型</label><select id="training-type" onchange="toggleTrainingFields()"><option value="anaerobic">無氧訓練 (重量/組數/次數)</option><option value="aerobic">有氧訓練 (時間/距離)</option></select></div>
+                        <div class="form-group autocomplete-wrapper">
                             <label>動作名稱</label>
-                            <input type="text" id="training-name" placeholder="例如：深蹲 或 跑步機">
+                            <input type="text" id="training-name" placeholder="輸入或搜尋動作..." oninput="handleTrainingSearch(this.value)">
+                            <div id="training-autocomplete-list" class="autocomplete-items"></div>
                         </div>
-
                         <div id="training-anaerobic-fields" class="grid-inputs">
-                            <div class="form-group">
-                                <label>重量 (kg)</label>
-                                <input type="number" id="training-weight" placeholder="0">
-                            </div>
-                            <div class="form-group">
-                                <label>組數 (Sets)</label>
-                                <input type="number" id="training-sets" placeholder="0">
-                            </div>
-                            <div class="form-group" style="grid-column: span 2;">
-                                <label>次數 (Reps/每組)</label>
-                                <input type="number" id="training-reps" placeholder="0">
-                            </div>
+                            <div class="form-group"><label>重量 (kg)</label><input type="number" id="training-weight" placeholder="0"></div>
+                            <div class="form-group"><label>組數 (Sets)</label><input type="number" id="training-sets" placeholder="0"></div>
+                            <div class="form-group" style="grid-column: span 2;"><label>次數 (Reps/每組)</label><input type="number" id="training-reps" placeholder="0"></div>
                         </div>
-
                         <div id="training-aerobic-fields" class="grid-inputs" style="display: none;">
-                            <div class="form-group">
-                                <label>時間 (分鐘)</label>
-                                <input type="number" id="training-time" placeholder="0">
-                            </div>
-                            <div class="form-group">
-                                <label>距離 (km)</label>
-                                <input type="number" id="training-distance" placeholder="0">
-                            </div>
+                            <div class="form-group"><label>時間 (分鐘)</label><input type="number" id="training-time" placeholder="0"></div>
+                            <div class="form-group"><label>距離 (km)</label><input type="number" id="training-distance" placeholder="0"></div>
                         </div>
-
                         <button class="btn-primary" onclick="addTrainingRecord()">新增至清單</button>
                     </div>
-
-                    <div class="card glass-effect">
-                        <h2 class="card-subtitle" id="training-list-subtitle">今日訓練清單</h2>
-                        <div id="training-list-container" class="food-list"></div>
-                    </div>
+                    <div class="card glass-effect"><h2 class="card-subtitle" id="training-list-subtitle">今日訓練清單</h2><div id="training-list-container" class="food-list"></div></div>
                 </div>
 
                 <div id="training-history-view" style="display: none;">
-                    <div class="card glass-effect">
-                        <div class="form-group">
-                            <label>選擇歷史日期</label>
-                            <input type="date" id="training-history-date" onchange="updateHistoryUI()">
-                        </div>
-                    </div>
-                    <div class="card glass-effect">
-                        <h2 class="card-subtitle">該日訓練紀錄</h2>
-                        <div id="training-history-list-container" class="food-list"></div>
-                    </div>
+                    <div class="card glass-effect"><div class="form-group"><label>選擇歷史日期</label><input type="date" id="training-history-date" onchange="updateHistoryUI()"></div></div>
+                    <div class="card glass-effect"><h2 class="card-subtitle">該日訓練紀錄</h2><div id="training-history-list-container" class="food-list"></div></div>
                 </div>
             </section>
 
+            <section id="tab-community" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h1 class="page-title" style="margin-left: 30px; margin-bottom: 0;">社群互動</h1>
+                    <div class="icon" style="cursor:pointer; color:var(--text-primary);" onclick="openMessages()">💬</div>
+                </div>
+
+                <div class="card glass-effect" style="padding: 15px;">
+                    <input type="text" id="community-search" placeholder="🔍 搜尋貼文或用戶..." oninput="filterCommunity()" style="margin-bottom: 15px;">
+                    <div style="display:flex; gap: 10px;">
+                        <div class="avatar-small" id="my-avatar-preview">👤</div>
+                        <input type="text" id="post-content" placeholder="分享你的訓練或飲食..." style="flex:1; background: transparent; border:none; border-bottom: 1px solid rgba(255,255,255,0.2); border-radius:0;">
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top: 10px; align-items:center;">
+                        <div style="color:var(--text-secondary); font-size:20px; cursor:pointer;">📷 📹</div>
+                        <button class="btn-primary" style="width: auto; padding: 8px 20px; margin-top:0;" onclick="submitPost()">發佈</button>
+                    </div>
+                </div>
+
+                <div id="community-feed" style="display: flex; flex-direction: column; gap: 15px;">
+                    </div>
+            </section>
         </main>
 
         <nav class="bottom-nav">
-            <div class="nav-item active" onclick="switchTab('tab-user', this)">
-                <span class="icon">👤</span>
-                <span class="nav-text">用戶</span>
-            </div>
-            <div class="nav-item" onclick="switchTab('tab-meals', this)">
-                <span class="icon">🍽️</span>
-                <span class="nav-text">餐單</span>
-            </div>
-            <div class="nav-item" onclick="switchTab('tab-training', this)">
-                <span class="icon">💪</span>
-                <span class="nav-text">訓練</span>
-            </div>
+            <div class="nav-item active" onclick="switchTab('tab-user', this)"><span class="icon">👤</span><span class="nav-text">用戶</span></div>
+            <div class="nav-item" onclick="switchTab('tab-meals', this)"><span class="icon">🍽️</span><span class="nav-text">餐單</span></div>
+            <div class="nav-item" onclick="switchTab('tab-training', this)"><span class="icon">💪</span><span class="nav-text">訓練</span></div>
+            <div class="nav-item" onclick="switchTab('tab-community', this)"><span class="icon">🌐</span><span class="nav-text">社群</span></div>
         </nav>
     </div>
 
-    <div id="recipe-modal" class="modal-overlay">
-        <div class="modal-content glass-effect">
-            <div class="modal-header">
-                <h2>我的食譜庫</h2>
-                <span class="close-btn" onclick="closeRecipeModal()">&times;</span>
+    <div id="recipe-modal" class="modal-overlay"><div class="modal-content glass-effect"><div class="modal-header"><h2>我的食譜庫</h2><span class="close-btn" onclick="closeRecipeModal()">&times;</span></div><div id="my-recipes-list" class="food-list" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;"></div></div></div>
+
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content glass-effect" style="max-height: 80vh; overflow-y:auto;">
+            <div class="modal-header"><h2>系統與個人設定</h2><span class="close-btn" onclick="toggleSettingsModal()">&times;</span></div>
+            
+            <div style="margin-top: 15px;">
+                <h3 style="font-size: 14px; color: var(--accent-color);">社群個人檔案</h3>
+                <div class="form-group"><label>社群暱稱</label><input type="text" id="profile-name" value="User_123" onchange="updateProfile()"></div>
+                <div class="form-group"><label>選擇頭像</label><select id="profile-avatar" onchange="updateProfile()"><option value="👤">👤 預設</option><option value="💪">💪 肌肉</option><option value="🔥">🔥 火焰</option><option value="🥑">🥑 酪梨</option></select></div>
+                
+                <h3 style="font-size: 14px; color: var(--accent-color); margin-top: 20px;">資料同步</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                    <span style="font-size:14px;">Apple Health / Google Fit</span>
+                    <input type="checkbox" id="sync-health" style="width:auto; transform:scale(1.5);">
+                </div>
+
+                <h3 style="font-size: 14px; color: var(--accent-color); margin-top: 20px;">通知設定</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                    <span style="font-size:14px;">允許系統發送通知權限</span>
+                    <button class="btn-primary" style="width:auto; padding:5px 10px; font-size:12px; margin:0;" onclick="requestNotificationPerm()">要求權限</button>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                    <span style="font-size:14px;">休息計時器結束通知</span>
+                    <input type="checkbox" id="notify-timer" checked style="width:auto; transform:scale(1.5);">
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                    <span style="font-size:14px;">社群留言/點讚通知</span>
+                    <input type="checkbox" id="notify-social" checked style="width:auto; transform:scale(1.5);">
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                    <span style="font-size:14px;">社群訊息通知</span>
+                    <input type="checkbox" id="notify-msg" checked style="width:auto; transform:scale(1.5);">
+                </div>
             </div>
-            <div id="my-recipes-list" class="food-list" style="margin-top: 15px; max-height: 60vh; overflow-y: auto;"></div>
+            <button class="btn-primary" onclick="toggleSettingsModal()">儲存設定</button>
         </div>
     </div>
 
-    <script src="js/tabs.js"></script>
-    <script src="js/tdee.js"></script>
+    <div id="messages-modal" class="modal-overlay"><div class="modal-content glass-effect"><div class="modal-header"><h2>訊息匣</h2><span class="close-btn" onclick="closeMessages()">&times;</span></div><div class="empty-state">目前沒有新訊息。</div></div></div>
+
     <script src="js/database.js"></script>
+    <script src="js/training_db.js"></script>
+    <script src="js/app.js"></script> <script src="js/tdee.js"></script>
     <script src="js/meals.js"></script>
-    <script src="js/training.js"></script> </body>
+    <script src="js/training.js"></script>
+    <script src="js/community.js"></script>
+</body>
 </html>
