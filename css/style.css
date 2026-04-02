@@ -28,7 +28,6 @@ body {
     min-height: 100vh;
 }
 
-/* 解決手機瀏海與動態島遮擋問題 */
 .safe-area-header {
     height: var(--safe-top);
     background-color: var(--bg-color);
@@ -37,10 +36,9 @@ body {
 main {
     flex: 1;
     padding: 20px;
-    padding-bottom: calc(90px + var(--safe-bottom)); /* 確保底部內容不被導航列擋住 */
+    padding-bottom: calc(90px + var(--safe-bottom));
 }
 
-/* 分頁切換邏輯 */
 .tab-content {
     display: none;
     animation: fadeIn 0.3s ease-in-out;
@@ -58,8 +56,34 @@ main {
 .page-title {
     font-size: 24px;
     font-weight: 700;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     letter-spacing: 1px;
+}
+
+/* 子分頁樣式 */
+.sub-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 5px;
+    margin-bottom: 20px;
+}
+
+.sub-tab-item {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sub-tab-item.active {
+    background: var(--accent-color);
+    color: #000;
+    font-weight: bold;
 }
 
 .glass-effect {
@@ -106,6 +130,50 @@ input:focus, select:focus {
     border-color: var(--accent-color);
 }
 
+/* 智慧搜尋下拉選單 */
+.autocomplete-wrapper {
+    position: relative;
+}
+
+.autocomplete-items {
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    background: rgba(10, 14, 20, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 99;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.autocomplete-item {
+    padding: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.autocomplete-item:hover {
+    background-color: rgba(0, 210, 255, 0.1);
+}
+
+.ac-name {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.ac-nutrients {
+    font-size: 11px;
+    color: var(--accent-color);
+}
+
 .grid-inputs {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -131,7 +199,6 @@ input:focus, select:focus {
     transform: scale(0.98);
 }
 
-/* 顯示卡片與儀表板 */
 .result-card, .dashboard-card {
     text-align: center;
 }
@@ -176,10 +243,16 @@ input:focus, select:focus {
     font-size: 14px;
 }
 
-.macro-item span:last-child {
+.macro-item span:first-of-type {
     font-weight: bold;
     color: #fff;
     margin-left: 5px;
+}
+
+.macro-percent {
+    font-size: 10px;
+    color: var(--target-color);
+    font-weight: normal;
 }
 
 .chart-wrapper {
@@ -187,7 +260,6 @@ input:focus, select:focus {
     width: 100%;
 }
 
-/* 食物清單樣式 */
 .food-list {
     display: flex;
     flex-direction: column;
@@ -239,7 +311,6 @@ input:focus, select:focus {
     padding: 20px 0;
 }
 
-/* 導航列 */
 .bottom-nav {
     position: fixed;
     bottom: 0;

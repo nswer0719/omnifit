@@ -63,14 +63,10 @@ function calculateTDEE() {
     const tdeeCurrent = Math.round(bmrCurrent * activity);
     const tdeeTarget = Math.round(bmrTarget * activity);
 
-    // 更新用戶分頁 UI
     document.getElementById('tdee-current').innerText = tdeeCurrent.toLocaleString();
     document.getElementById('tdee-target').innerText = tdeeTarget.toLocaleString();
-
-    // 同步更新「餐單」分頁中的目標 TDEE
     document.getElementById('dashboard-target-tdee').innerText = tdeeTarget.toLocaleString();
 
-    // 更新圖表
     weightChart.data.datasets[0].data[6] = currentWeight;
     weightChart.update();
     
