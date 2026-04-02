@@ -1,45 +1,36 @@
-﻿// js/meals.js
-// 永久資料狀態 (絕不刪除)
+// js/meals.js
 let dailyFoods = [];
-let plannedFoods = {
-    day1: [], day2: [], day3: [], day4: [], day5: [], day6: [], day7: []
-};
-
-// 食譜建構器暫存狀態
+let plannedFoods = { day1: [], day2: [], day3: [], day4: [], day5: [], day6: [], day7: [] };
+let waterIntake = 0; 
 let currentRecipeIngredients = [];
-
-// 介面與選取狀態追蹤
-let currentMealContext = 'today'; // 'today', 'plan', 或 'recipe'
+let currentMealContext = 'today'; 
 let currentSelectedBaseFood = null; 
 let currentRecipeSelectedBaseFood = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-    updateFoodUI();
-});
+document.addEventListener('DOMContentLoaded', () => { updateFoodUI(); });
 
-// 切換 三大子分頁
 function switchMealContext(context, element) {
     currentMealContext = context;
-    
-    // UI 高亮切換
-    document.querySelectorAll('.sub-tab-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('#tab-meals .sub-tab-item').forEach(el => el.classList.remove('active'));
     element.classList.add('active');
 
     if (context === 'recipe') {
         document.getElementById('tracker-view').style.display = 'none';
         document.getElementById('recipe-view').style.display = 'block';
-        updateRecipeUI(); // 切換時刷新食譜介面
+        updateRecipeUI(); 
     } else {
         document.getElementById('tracker-view').style.display = 'block';
         document.getElementById('recipe-view').style.display = 'none';
         
         if (context === 'plan') {
             document.getElementById('plan-day-selector').style.display = 'block';
+            document.getElementById('water-tracker-card').style.display = 'none';
             document.getElementById('dashboard-total-label').innerText = '規劃總攝取';
             document.getElementById('list-subtitle').innerText = '規劃紀錄清單';
             document.getElementById('form-subtitle').innerText = '新增至規劃';
         } else {
             document.getElementById('plan-day-selector').style.display = 'none';
+            document.getElementById('water-tracker-card').style.display = 'block';
             document.getElementById('dashboard-total-label').innerText = '今日已攝取';
             document.getElementById('list-subtitle').innerText = '今日紀錄清單';
             document.getElementById('form-subtitle').innerText = '記錄新食物';
@@ -48,44 +39,36 @@ function switchMealContext(context, element) {
     }
 }
 
-/* ================= 飲食與規劃系統 (Tracker View) ================= */
+// --- 飲水功能 ---
+function updateWater(amount) {
+    waterIntake += amount;
+    if(waterIntake < 0) waterIntake = 0;
+    document.getElementById('water-current').innerText = waterIntake;
+}
 
+// --- 飲食追蹤 ---
 function handleSearch(query) {
     const list = document.getElementById('autocomplete-list');
     list.innerHTML = '';
-    
-    if (!query) {
-        list.style.display = 'none';
-        currentSelectedBaseFood = null;
-        return;
-    }
+    if (!query) { list.style.display = 'none'; currentSelectedBaseFood = null; return; }
 
-    const matches = foodDatabase.filter(food => food.name.toLowerCase().includes(query.toLowerCase()));
-
+    const matches = foodDatabase.filter(food => food.name.toLowerCase().includes(query.toLowerCase()) && !food.isDeleted);
     if (matches.length > 0) {
         list.style.display = 'block';
         matches.forEach(food => {
             const item = document.createElement('div');
             item.className = 'autocomplete-item';
-            item.innerHTML = `
-                <span class="ac-name">${food.name}</span>
-                <span class="ac-nutrients">${food.calories}kcal | P:${food.protein}g F:${food.fat}g C:${food.carbs}g</span>
-            `;
+            item.innerHTML = `<span class="ac-name">${food.name}</span><span class="ac-nutrients">${food.calories}kcal | P:${food.protein}g</span>`;
             item.onclick = () => selectFood(food);
             list.appendChild(item);
         });
-    } else {
-        list.style.display = 'none';
-        currentSelectedBaseFood = null;
-    }
+    } else { list.style.display = 'none'; currentSelectedBaseFood = null; }
 }
 
 function selectFood(food) {
     document.getElementById('food-search').value = food.name;
     document.getElementById('autocomplete-list').style.display = 'none';
-    currentSelectedBaseFood = {
-        calories: food.calories, protein: food.protein, fat: food.fat, carbs: food.carbs
-    };
+    currentSelectedBaseFood = { calories: food.calories, protein: food.protein, fat: food.fat, carbs: food.carbs };
     handleQuantityChange();
 }
 
@@ -101,45 +84,34 @@ function handleQuantityChange() {
 
 function addFoodRecord() {
     const name = document.getElementById('food-search').value.trim();
-    const type = document.getElementById('meal-type').value;
+    if (!name || !currentSelectedBaseFood) { alert("請從資料庫選取有效食物！"); return; }
+    
     const qty = parseFloat(document.getElementById('food-qty').value) || 1;
-    const calories = parseFloat(document.getElementById('food-calories').value) || 0;
-    const protein = parseFloat(document.getElementById('food-protein').value) || 0;
-    const fat = parseFloat(document.getElementById('food-fat').value) || 0;
-    const carbs = parseFloat(document.getElementById('food-carbs').value) || 0;
-
-    if (!name) {
-        alert("請輸入食物名稱或透過資料庫搜尋！");
-        return;
-    }
-
-    const displayName = qty !== 1 ? `${name} (x${qty})` : name;
     const newFood = {
         id: Date.now(),
-        name: displayName,
-        type: type,
-        calories: Math.round(calories),
-        protein: parseFloat(protein.toFixed(1)),
-        fat: parseFloat(fat.toFixed(1)),
-        carbs: parseFloat(carbs.toFixed(1)),
-        timestamp: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+        name: qty !== 1 ? `${name} (x${qty})` : name,
+        type: document.getElementById('meal-type').value,
+        calories: parseFloat(document.getElementById('food-calories').value),
+        protein: parseFloat(document.getElementById('food-protein').value),
+        fat: parseFloat(document.getElementById('food-fat').value),
+        carbs: parseFloat(document.getElementById('food-carbs').value),
+        timestamp: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }),
+        isDeleted: false // 軟刪除標記
     };
 
-    if (currentMealContext === 'today') {
-        dailyFoods.push(newFood);
-    } else {
-        const selectedDay = document.getElementById('plan-day').value;
-        plannedFoods[selectedDay].push(newFood);
-    }
+    if (currentMealContext === 'today') dailyFoods.push(newFood);
+    else plannedFoods[document.getElementById('plan-day').value].push(newFood);
     
     document.getElementById('food-search').value = '';
     document.getElementById('food-qty').value = '1';
-    document.getElementById('food-calories').value = '';
-    document.getElementById('food-protein').value = '';
-    document.getElementById('food-fat').value = '';
-    document.getElementById('food-carbs').value = '';
     currentSelectedBaseFood = null;
+    updateFoodUI();
+}
 
+function deleteRecord(id, type) {
+    let targetArray = type === 'today' ? dailyFoods : plannedFoods[type];
+    const item = targetArray.find(f => f.id === id);
+    if(item) item.isDeleted = true; // 隱藏標記，不實際刪除資料
     updateFoodUI();
 }
 
@@ -148,114 +120,97 @@ function updateFoodUI() {
     const listContainer = document.getElementById('food-list-container');
     listContainer.innerHTML = '';
 
-    let dataSource = currentMealContext === 'today' ? dailyFoods : plannedFoods[document.getElementById('plan-day').value];
+    let activeDay = document.getElementById('plan-day').value;
+    let dataSource = currentMealContext === 'today' ? dailyFoods : plannedFoods[activeDay];
+    let displaySource = dataSource.filter(f => !f.isDeleted); // 過濾被刪除的項目
 
-    if (dataSource.length === 0) {
-        listContainer.innerHTML = '<div class="empty-state">目前還沒有任何紀錄，趕快新增吧！</div>';
+    if (displaySource.length === 0) {
+        listContainer.innerHTML = '<div class="empty-state">目前還沒有任何紀錄。</div>';
     } else {
-        const reversedFoods = [...dataSource].reverse();
+        const reversedFoods = [...displaySource].reverse();
         reversedFoods.forEach(food => {
             totalCals += food.calories; totalPro += food.protein; totalFat += food.fat; totalCarbs += food.carbs;
-            const foodElement = document.createElement('div');
-            foodElement.className = 'food-item';
-            foodElement.innerHTML = `
+            const el = document.createElement('div');
+            el.className = 'food-item';
+            el.innerHTML = `
                 <div class="food-header">
-                    <div class="food-title">${food.name} <span style="font-size: 12px; color: #a0a0a0; font-weight: normal; margin-left: 5px;">${food.timestamp}</span></div>
-                    <div class="food-tag">${food.type}</div>
+                    <div class="food-title">${food.name} <span class="food-tag">${food.type}</span></div>
+                    <button class="btn-danger" onclick="deleteRecord(${food.id}, '${currentMealContext === 'today' ? 'today' : activeDay}')">刪除</button>
                 </div>
                 <div class="food-macros">
-                    <div>卡路里: <span>${food.calories}</span> kcal</div>
-                    <div>P: <span>${food.protein}</span>g | F: <span>${food.fat}</span>g | C: <span>${food.carbs}</span>g</div>
+                    <div>卡路里: <span>${Math.round(food.calories)}</span> kcal</div>
+                    <div>P: <span>${food.protein.toFixed(1)}</span>g | F: <span>${food.fat.toFixed(1)}</span>g | C: <span>${food.carbs.toFixed(1)}</span>g</div>
                 </div>
             `;
-            listContainer.appendChild(foodElement);
+            listContainer.appendChild(el);
         });
     }
 
-    totalPro = Math.round(totalPro); totalFat = Math.round(totalFat); totalCarbs = Math.round(totalCarbs);
-    let pctPro = 0, pctFat = 0, pctCarbs = 0;
-    const calculatedMacroCalories = (totalPro * 4) + (totalFat * 9) + (totalCarbs * 4);
-    
-    if (calculatedMacroCalories > 0) {
-        pctPro = Math.round(((totalPro * 4) / calculatedMacroCalories) * 100);
-        pctFat = Math.round(((totalFat * 9) / calculatedMacroCalories) * 100);
-        pctCarbs = Math.round(((totalCarbs * 4) / calculatedMacroCalories) * 100);
-    }
-
-    document.getElementById('total-calories').innerText = totalCals.toLocaleString();
-    document.getElementById('total-protein').innerText = totalPro;
-    document.getElementById('total-fat').innerText = totalFat;
-    document.getElementById('total-carbs').innerText = totalCarbs;
-    document.getElementById('pct-protein').innerText = `(${pctPro}%)`;
-    document.getElementById('pct-fat').innerText = `(${pctFat}%)`;
-    document.getElementById('pct-carbs').innerText = `(${pctCarbs}%)`;
+    document.getElementById('total-calories').innerText = Math.round(totalCals).toLocaleString();
+    document.getElementById('total-protein').innerText = totalPro.toFixed(1);
+    document.getElementById('total-fat').innerText = totalFat.toFixed(1);
+    document.getElementById('total-carbs').innerText = totalCarbs.toFixed(1);
 }
 
-/* ================= 自訂食譜系統 (Recipe View) ================= */
-
+// --- 食譜建構器 ---
 function handleRecipeSearch(query) {
     const list = document.getElementById('recipe-autocomplete-list');
     list.innerHTML = '';
-    
-    if (!query) {
-        list.style.display = 'none';
-        currentRecipeSelectedBaseFood = null;
-        return;
-    }
+    if (!query) { list.style.display = 'none'; currentRecipeSelectedBaseFood = null; document.getElementById('recipe-food-preview').style.display='none'; return; }
 
-    const matches = foodDatabase.filter(food => food.name.toLowerCase().includes(query.toLowerCase()));
-
+    const matches = foodDatabase.filter(food => food.name.toLowerCase().includes(query.toLowerCase()) && !food.isDeleted);
     if (matches.length > 0) {
         list.style.display = 'block';
         matches.forEach(food => {
             const item = document.createElement('div');
             item.className = 'autocomplete-item';
-            item.innerHTML = `
-                <span class="ac-name">${food.name}</span>
-                <span class="ac-nutrients">${food.calories}kcal | P:${food.protein}g F:${food.fat}g C:${food.carbs}g</span>
-            `;
+            item.innerHTML = `<span class="ac-name">${food.name}</span>`;
             item.onclick = () => selectRecipeFood(food);
             list.appendChild(item);
         });
-    } else {
-        list.style.display = 'none';
-        currentRecipeSelectedBaseFood = null;
-    }
+    } else { list.style.display = 'none'; currentRecipeSelectedBaseFood = null; }
 }
 
 function selectRecipeFood(food) {
     document.getElementById('recipe-food-search').value = food.name;
     document.getElementById('recipe-autocomplete-list').style.display = 'none';
-    currentRecipeSelectedBaseFood = {
-        name: food.name, calories: food.calories, protein: food.protein, fat: food.fat, carbs: food.carbs
-    };
+    currentRecipeSelectedBaseFood = { name: food.name, calories: food.calories, protein: food.protein, fat: food.fat, carbs: food.carbs };
+    updateRecipePreviewQty();
+}
+
+function updateRecipePreviewQty() {
+    const preview = document.getElementById('recipe-food-preview');
+    const qty = parseFloat(document.getElementById('recipe-food-qty').value) || 1;
+    if(currentRecipeSelectedBaseFood) {
+        preview.style.display = 'block';
+        preview.innerText = `選中: ${currentRecipeSelectedBaseFood.name} (x${qty}) ➔ ${Math.round(currentRecipeSelectedBaseFood.calories * qty)} kcal | P:${(currentRecipeSelectedBaseFood.protein * qty).toFixed(1)}g F:${(currentRecipeSelectedBaseFood.fat * qty).toFixed(1)}g C:${(currentRecipeSelectedBaseFood.carbs * qty).toFixed(1)}g`;
+    } else {
+        preview.style.display = 'none';
+    }
 }
 
 function addRecipeIngredient() {
-    const searchInput = document.getElementById('recipe-food-search').value.trim();
     const qty = parseFloat(document.getElementById('recipe-food-qty').value) || 1;
+    if (!currentRecipeSelectedBaseFood) { alert("請從資料庫中選取有效食材！"); return; }
 
-    if (!searchInput || !currentRecipeSelectedBaseFood) {
-        alert("請從資料庫中選取有效食材！(自訂食譜必須基於現有資料庫食材組合)");
-        return;
-    }
-
-    const ingredient = {
+    currentRecipeIngredients.push({
+        id: Date.now(),
         name: qty !== 1 ? `${currentRecipeSelectedBaseFood.name} (x${qty})` : currentRecipeSelectedBaseFood.name,
-        calories: Math.round(currentRecipeSelectedBaseFood.calories * qty),
-        protein: parseFloat((currentRecipeSelectedBaseFood.protein * qty).toFixed(1)),
-        fat: parseFloat((currentRecipeSelectedBaseFood.fat * qty).toFixed(1)),
-        carbs: parseFloat((currentRecipeSelectedBaseFood.carbs * qty).toFixed(1))
-    };
-
-    // 草稿疊加
-    currentRecipeIngredients.push(ingredient);
+        calories: currentRecipeSelectedBaseFood.calories * qty,
+        protein: currentRecipeSelectedBaseFood.protein * qty,
+        fat: currentRecipeSelectedBaseFood.fat * qty,
+        carbs: currentRecipeSelectedBaseFood.carbs * qty
+    });
     
-    // 清空輸入
     document.getElementById('recipe-food-search').value = '';
     document.getElementById('recipe-food-qty').value = '1';
+    document.getElementById('recipe-food-preview').style.display = 'none';
     currentRecipeSelectedBaseFood = null;
+    updateRecipeUI();
+}
 
+function deleteRecipeDraftItem(id) {
+    currentRecipeIngredients = currentRecipeIngredients.filter(ing => ing.id !== id);
     updateRecipeUI();
 }
 
@@ -269,16 +224,16 @@ function updateRecipeUI() {
     } else {
         currentRecipeIngredients.forEach(ing => {
             recCals += ing.calories; recPro += ing.protein; recFat += ing.fat; recCarbs += ing.carbs;
-            
             const el = document.createElement('div');
             el.className = 'food-item';
             el.innerHTML = `
                 <div class="food-header">
                     <div class="food-title">${ing.name}</div>
+                    <button class="btn-danger" onclick="deleteRecipeDraftItem(${ing.id})">移除</button>
                 </div>
                 <div class="food-macros">
-                    <div>卡路里: <span>${ing.calories}</span> kcal</div>
-                    <div>P: <span>${ing.protein}</span>g | F: <span>${ing.fat}</span>g | C: <span>${ing.carbs}</span>g</div>
+                    <div><span>${Math.round(ing.calories)}</span> kcal</div>
+                    <div>P:<span>${ing.protein.toFixed(1)}</span>g F:<span>${ing.fat.toFixed(1)}</span>g C:<span>${ing.carbs.toFixed(1)}</span>g</div>
                 </div>
             `;
             listContainer.appendChild(el);
@@ -286,56 +241,66 @@ function updateRecipeUI() {
     }
 
     document.getElementById('recipe-total-calories').innerText = Math.round(recCals).toLocaleString();
-    document.getElementById('recipe-total-protein').innerText = Math.round(recPro);
-    document.getElementById('recipe-total-fat').innerText = Math.round(recFat);
-    document.getElementById('recipe-total-carbs').innerText = Math.round(recCarbs);
-}
-
-function clearRecipeDraft() {
-    currentRecipeIngredients = [];
-    document.getElementById('recipe-name').value = '';
-    document.getElementById('recipe-food-search').value = '';
-    currentRecipeSelectedBaseFood = null;
-    updateRecipeUI();
+    document.getElementById('recipe-total-protein').innerText = recPro.toFixed(1);
+    document.getElementById('recipe-total-fat').innerText = recFat.toFixed(1);
+    document.getElementById('recipe-total-carbs').innerText = recCarbs.toFixed(1);
 }
 
 function saveRecipe() {
-    const recipeName = document.getElementById('recipe-name').value.trim();
-    
-    if (!recipeName) {
-        alert("請為你的食譜命名！");
-        return;
-    }
-    
-    if (currentRecipeIngredients.length === 0) {
-        alert("食譜中尚未加入任何食材！");
-        return;
-    }
+    const name = document.getElementById('recipe-name').value.trim();
+    if (!name || currentRecipeIngredients.length === 0) { alert("請填寫食譜名稱並加入食材！"); return; }
 
-    // 計算總數
     let totalCals = 0, totalPro = 0, totalFat = 0, totalCarbs = 0;
-    currentRecipeIngredients.forEach(ing => {
-        totalCals += ing.calories;
-        totalPro += ing.protein;
-        totalFat += ing.fat;
-        totalCarbs += ing.carbs;
-    });
+    currentRecipeIngredients.forEach(ing => { totalCals+=ing.calories; totalPro+=ing.protein; totalFat+=ing.fat; totalCarbs+=ing.carbs; });
 
-    // 建立新的資料庫紀錄 (加入後綴便於辨識)
-    const finalRecipeObj = {
-        name: `${recipeName} [自訂食譜]`,
+    foodDatabase.push({
+        name: `${name} [自訂食譜]`,
         calories: Math.round(totalCals),
         protein: parseFloat(totalPro.toFixed(1)),
         fat: parseFloat(totalFat.toFixed(1)),
-        carbs: parseFloat(totalCarbs.toFixed(1))
-    };
+        carbs: parseFloat(totalCarbs.toFixed(1)),
+        isDeleted: false
+    });
 
-    // 寫入全局食物資料庫 (永久保留，可在今日/7日選單中被搜尋到)
-    foodDatabase.push(finalRecipeObj);
+    alert("食譜儲存成功！");
+    currentRecipeIngredients = [];
+    document.getElementById('recipe-name').value = '';
+    updateRecipeUI();
+}
 
-    alert(`食譜「${recipeName}」已成功儲存至食物資料庫！以後你可以直接搜尋它。`);
+// --- 我的食譜彈窗 ---
+function openRecipeModal() {
+    document.getElementById('recipe-modal').style.display = 'flex';
+    renderMyRecipes();
+}
+function closeRecipeModal() {
+    document.getElementById('recipe-modal').style.display = 'none';
+}
+function deleteCustomRecipe(index) {
+    foodDatabase[index].isDeleted = true; // 軟刪除
+    renderMyRecipes();
+}
+function renderMyRecipes() {
+    const list = document.getElementById('my-recipes-list');
+    list.innerHTML = '';
+    let hasRecipe = false;
     
-    // 清空草稿並回到今日餐單
-    clearRecipeDraft();
-    switchMealContext('today', document.querySelector('.sub-tab-item:nth-child(1)'));
+    foodDatabase.forEach((food, index) => {
+        if (food.name.includes('[自訂食譜]') && !food.isDeleted) {
+            hasRecipe = true;
+            const el = document.createElement('div');
+            el.className = 'food-item';
+            el.innerHTML = `
+                <div class="food-header">
+                    <div class="food-title">${food.name.replace(' [自訂食譜]','')}</div>
+                    <button class="btn-danger" onclick="deleteCustomRecipe(${index})">刪除</button>
+                </div>
+                <div class="food-macros">
+                    <div><span>${food.calories}</span> kcal | P:${food.protein}g F:${food.fat}g C:${food.carbs}g</div>
+                </div>
+            `;
+            list.appendChild(el);
+        }
+    });
+    if(!hasRecipe) list.innerHTML = '<div class="empty-state">尚未建立任何自訂食譜。</div>';
 }
