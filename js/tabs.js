@@ -1,4 +1,4 @@
-﻿// js/tabs.js
+// js/tabs.js
 function switchTab(targetId, navElement) {
     const tabs = document.querySelectorAll('.tab-content');
     tabs.forEach(tab => tab.classList.remove('active'));
